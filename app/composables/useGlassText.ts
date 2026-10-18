@@ -24,6 +24,8 @@ export const glassParams = {
   enterDuration: 0.9,
   enterStart: 0.92,
   enterStagger: 0.06,
+  /** Manual mode (text in a pinned section): delay between lines dissolving, as a fraction of the exit. */
+  manualStagger: 0.35,
 }
 
 export interface GlassLine {
@@ -33,6 +35,8 @@ export interface GlassLine {
   /** 0 → 1, scrubbed by scroll while crossing the glass band. */
   exit: number
   color: string
+  /** False for manually driven text that isn't crossing the top band (the edge sits up there). */
+  lightsEdge: boolean
 }
 
 // Module singleton: one edge line and one ticker for every GlassText on the page.
@@ -53,7 +57,7 @@ const tick: gsap.TickerCallback = (_t, deltaMs) => {
   let color = ''
   for (const lines of groups) {
     for (const l of lines()) {
-      if (l.exit <= 0 || l.exit >= 1) continue
+      if (!l.lightsEdge || l.exit <= 0 || l.exit >= 1) continue
       const w = Math.sin(Math.PI * l.exit) * l.enter
       weight += w
       if (w > strongest) {
@@ -109,6 +113,7 @@ function mountShared() {
       f.addBinding(glassParams, 'enterDuration', { min: 0.1, max: 3, step: 0.05 })
       f.addBinding(glassParams, 'enterStart', { min: 0.5, max: 1, step: 0.01 }).on('change', refresh)
       f.addBinding(glassParams, 'enterStagger', { min: 0, max: 0.3, step: 0.01 })
+      f.addBinding(glassParams, 'manualStagger', { min: 0, max: 1, step: 0.01 })
       // Removing from the root before dispose — Tweakpane otherwise retains the folder (see useStage).
       paneFolder = {
         dispose() {

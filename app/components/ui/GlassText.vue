@@ -7,8 +7,14 @@ import { glassParams, registerGlassLines, type GlassLine } from '~/composables/u
 /**
  * Wraps a heading/paragraph. Exiting lines pass "behind glass" near the top of the viewport
  * (scrubbed, line by line); entering lines rise and fade in (timed, no blur). ART_DIRECTION §3.
+ *
+ * exitMode 'manual': for text inside a pinned section, where nothing moves through the band.
+ * The parent drives the exit with `setExit(0–1)` (exposed); lines still dissolve top-first.
  */
-const props = withDefaults(defineProps<{ as?: string }>(), { as: 'div' })
+const props = withDefaults(defineProps<{ as?: string; exitMode?: 'scroll' | 'manual' }>(), {
+  as: 'div',
+  exitMode: 'scroll',
+})
 
 interface LineState extends GlassLine {
   triggers: ScrollTrigger[]
@@ -75,14 +81,47 @@ function teardownLines() {
   lines = []
 }
 
+// Manual mode: the last exit value set by the parent, re-applied after a re-split.
+let manualExit = 0
+let manualEntered = false
+
+/** Line i dissolves over its own slice of the exit; the top line goes first. */
+function applyManualExit() {
+  const n = lines.length
+  const s = glassParams.manualStagger
+  lines.forEach((l, i) => {
+    l.exit = Math.min(1, Math.max(0, manualExit * (1 + s * (n - 1)) - i * s))
+    render(l)
+  })
+}
+
+function setExit(progress: number) {
+  manualExit = Math.min(1, Math.max(0, progress))
+  applyManualExit()
+}
+
+defineExpose({ setExit })
+
 function build(self: SplitText) {
   teardownLines()
   const vh = window.innerHeight
   let staggerIndex = 0
+  const manual = props.exitMode === 'manual'
   lines = (self.lines as HTMLElement[]).map((el) => {
     el.style.transformOrigin = '50% 100%'
-    return { el, enter: 0, exit: 0, color: getComputedStyle(el).color, triggers: [], tween: null }
+    return { el, enter: 0, exit: 0, color: getComputedStyle(el).color, lightsEdge: !manual, triggers: [], tween: null }
   })
+
+  if (manual) {
+    // No scroll triggers: positions inside a pin don't move. Rise in once on first split only.
+    lines.forEach((l, i) => {
+      if (manualEntered) l.enter = 1
+      else playEnter(l, i * glassParams.enterStagger)
+    })
+    manualEntered = true
+    applyManualExit()
+    return
+  }
 
   for (const l of lines) {
     const exit = ScrollTrigger.create({

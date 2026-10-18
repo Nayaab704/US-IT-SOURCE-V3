@@ -14,6 +14,8 @@ export interface Body {
   radius: number
   mass: number
   inertia: number
+  /** 0–1 multiplier on the cursor force — fades to 0 as the piece assembles into its slot. */
+  influence: number
   /** Per-body phases/frequencies for idle drift (incommensurate → never visibly repeats). */
   seeds: [number, number, number, number, number, number]
 }
@@ -95,9 +97,9 @@ export class PieceSimulation {
         _d.subVectors(b.position, pp)
         _d.z = 0
         const fall = Math.exp(-_d.lengthSq() / (pointer.radius * pointer.radius))
-        if (fall > 1e-3) {
+        if (fall > 1e-3 && b.influence > 0) {
           const layerFactor = b.layer === 2 ? pointer.farFactor : b.layer === 1 ? (1 + pointer.farFactor) / 2 : 1
-          const k = pointer.push * fall * layerFactor * speedGate
+          const k = pointer.push * fall * layerFactor * speedGate * b.influence
           const fx = pv.x * k
           const fy = pv.y * k
           _force.x += fx

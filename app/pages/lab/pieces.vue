@@ -11,7 +11,7 @@ useStageScene(
     createPiecesScene({
       id: 'pieces',
       // Pieces are lit by the same key light as the fog (live: tuning the atmosphere moves it).
-      keyLight: () => atmosphere?.params.key ?? { x: 0.8, y: 0.9, color: '#ffffff' },
+      keyLight: () => atmosphere?.keyLight() ?? { x: 0.8, y: 0.9, color: '#ffffff' },
     }),
   hero,
   { order: 1 },
@@ -22,8 +22,8 @@ useStageScene(
   <UiSiteNav />
   <main>
     <section id="hero" ref="hero" class="hero" data-scene data-theme="night">
-      <!-- ART_DIRECTION 1A: nav + small intro line + SCROLL TO ASSEMBLE. Intro copy is not written yet. -->
-      <p class="intro">[PLACEHOLDER: intro line]</p>
+      <!-- Floating only (assembly lives on /lab/hero). Copy: ART_DIRECTION 1A. -->
+      <p class="intro">Custom software, AI and computer vision — built for one business at a time.</p>
       <p class="cue">Scroll to assemble</p>
     </section>
     <section class="after" data-scene data-theme="night">

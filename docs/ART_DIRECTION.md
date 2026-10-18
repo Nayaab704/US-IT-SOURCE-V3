@@ -83,16 +83,25 @@ Entering a case study, service page or About: a medium-thick line (8–14px at 1
 
 ### 1A — Hero: pieces in fluid (Night · SIGNATURE)
 - WebGL atmosphere: fog + 2–3 soft light volumes, slow noise drift, tone-mapped, dithered, grain.
-- ~30 thin extruded pieces (letterform fragments of the logotype), aluminium + ceramic materials, environment reflections, depth of field on distant pieces.
+- Thin extruded pieces = the logotype's own fragments (38 in the interim logotype — no extra decorative pieces), aluminium + ceramic materials, environment reflections, depth of field on distant pieces.
 - Cursor pushes pieces through a viscous medium.
-- Copy: nav + small intro line + `SCROLL TO ASSEMBLE`.
+- Copy: nav + intro line **"Custom software, AI and computer vision — built for one business at a time."** + `SCROLL TO ASSEMBLE`.
 
 ### 1B — Hero: built to fit
-- Scroll: pieces glide and nest into the **US IT SOURCE** logotype; seams close with a light sweep.
-- Headline: **"Technology built around the way your business works."**
+- **Logotype (interim, v0.1):** `app/assets/logo/logotype-fragments.svg` — constructed logotype, 1468 × 160 units, 38 pieces. Every `<path>` with an id is ONE piece (id format `<letterIndex>-<letter>-<piece>`, e.g. `06-O-a`); every piece floats in 1A and assembles into its exact slot in 1B. `#o-counter` marks the O's inner circle (aperture for the exit, later phase). Any SVG following this contract can replace it without code changes.
+- Assembled logotype: width ≈ 76% of viewport width on desktop (88% mobile), centre at ~42% of viewport height; pieces extruded with uniform depth/bevel.
+- Headline: **"Technology built around the way your business works."** (Geist 300, ~54px at 1440w, `--night-text`), below the logotype.
 - Services line (mono): SOFTWARE & APPS · AI MODELING · COMPUTER VISION · STAFF AUGMENTATION · TRAINING
-- Exit: camera pushes into the **O**; its counter holds warm daylight and becomes the aperture into Scene 2.
-- **[TBD] Logotype** must be designed before this scene is built. Until then use a placeholder outline.
+- **Pacing** — scrubbed to scroll (scrub ≈ 1, no snapping, fully reversible). Hero pinned for 250vh (mobile 150vh). Progress p = 0 → 1:
+  - **0.00–0.12 free play.** Pieces still float; cursor still pushes them. Intro line and `SCROLL TO ASSEMBLE` exit through the glass (text-behind-glass, §3).
+  - **0.12–0.70 assembly.** Each piece travels from its current floating position to its slot along a gently curved path. Stagger: far-layer pieces start later; total spread ≈ 0.25 of the range. Rotation resolves to 0 in the last 30% of each piece's own travel (turns and "clicks" in). Easing per piece: power3.inOut. Cursor/fluid influence fades to 0 as a piece approaches home; depth-of-field blur fades to sharp as far pieces arrive.
+  - **0.62–0.74 seam light sweep.** A thin highlight travels left → right across the assembled logotype along the seams — a moving specular sweep, not a glow blob. One pass. (Desktop only.)
+  - **0.70–0.84 headline** rises in below the logotype, then the mono services line 0.04 later. Clean rise + fade, no blur.
+  - **0.84–1.00 hold.** Still, calm composition; the atmosphere keeps its slow Level-1 drift.
+  - After assembly (Level 1 only, desktop): hovering the logotype lifts the piece under the cursor ~1–2 units toward the camera and lets it catch a little more light. Nothing bigger.
+- Mobile (< 768px or coarse pointer): pinned 150vh, same sequence compressed; no seam sweep; no hover response.
+- Reduced motion: no pin; the assembled logotype + headline + services line as a static, lit composition.
+- Exit (later phase): camera pushes into the **O**; its counter holds warm daylight and becomes the aperture into Scene 2.
 
 ### 2 — The way you actually work (Day · QUIET)
 - Headline (serif): "Every business has its own way of working." Sub: "Most software ignores it. We start by learning it."

@@ -29,6 +29,8 @@ import {
 export interface AtmosphereScene extends StageScene {
   readonly params: AtmosphereParams
   applyPreset(name: AtmospherePresetName): void
+  /** The key light as it is right now (incl. scroll shift + tint) — for objects lit by the same source. */
+  keyLight(): { x: number; y: number; color: string }
 }
 
 // Fixed start so the composition is identical on every load (art review needs repeatability).
@@ -53,6 +55,8 @@ export function createAtmosphereScene(
   const stirPos = new Vector2()
   const stirVec = new Vector2()
   const tmpColor = new Color()
+  const keyTint = new Color()
+  const keyNow = new Color()
 
   const u = <T>(value: T): IUniform<T> => ({ value })
   const fogUniforms = {
@@ -311,6 +315,18 @@ export function createAtmosphereScene(
     id: options.id ?? 'atmosphere',
     params,
     applyPreset,
+
+    keyLight() {
+      // Mirrors atmosphere.frag: position shifts and colour tints with uScroll.
+      const s = fogUniforms.uScroll.value
+      keyTint.set(params.key.color).multiply(tmpColor.set(params.scroll.tint))
+      keyNow.set(params.key.color).lerp(keyTint, s)
+      return {
+        x: params.key.x + params.scroll.shiftX * s,
+        y: params.key.y + params.scroll.shiftY * s,
+        color: `#${keyNow.getHexString()}`,
+      }
+    },
 
     init(ctx) {
       renderer = ctx.renderer

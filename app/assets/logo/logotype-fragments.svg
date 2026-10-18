@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1468 160" width="1468" height="160">
+  <!--
+    US IT SOURCE — interim constructed logotype (v0.1)
+    Grid: cap height 160, stroke 32, letter gap 28, word gap 80.
+    Every <path> is ONE physical piece. 38 pieces total.
+    id format: <letterIndex>-<letter>-<piece>   e.g. "06-O-a"
+    #o-counter marks the O's inner circle (aperture for the exit transition).
+  -->
+  <g id="logotype" fill="#16181D">
+    <g id="L01-U">
+      <path id="01-U-a" d="M0 0 H32 V104 H0 Z"/>
+      <path id="01-U-b" d="M80 0 H112 V104 H80 Z"/>
+      <path id="01-U-c" d="M0 104 A56 56 0 0 0 112 104 H80 A24 24 0 0 1 32 104 Z"/>
+    </g>
+    <g id="L02-S">
+      <path id="02-S-a" d="M188 0 H252 V32 H188 Z"/>
+      <path id="02-S-b" d="M188 0 A48 48 0 0 0 188 96 V64 A16 16 0 0 1 188 32 Z"/>
+      <path id="02-S-c" d="M188 64 H204 V96 H188 Z"/>
+      <path id="02-S-d" d="M204 64 A48 48 0 0 1 204 160 V128 A16 16 0 0 0 204 96 Z"/>
+      <path id="02-S-e" d="M140 128 H204 V160 H140 Z"/>
+    </g>
+    <g id="L03-I">
+      <path id="03-I-a" d="M332 0 H364 V100 H332 Z"/>
+      <path id="03-I-b" d="M332 100 H364 V160 H332 Z"/>
+    </g>
+    <g id="L04-T">
+      <path id="04-T-a" d="M392 0 H456 V32 H392 Z"/>
+      <path id="04-T-b" d="M456 0 H520 V32 H456 Z"/>
+      <path id="04-T-c" d="M440 32 H472 V160 H440 Z"/>
+    </g>
+    <g id="L05-S">
+      <path id="05-S-a" d="M648 0 H712 V32 H648 Z"/>
+      <path id="05-S-b" d="M648 0 A48 48 0 0 0 648 96 V64 A16 16 0 0 1 648 32 Z"/>
+      <path id="05-S-c" d="M648 64 H664 V96 H648 Z"/>
+      <path id="05-S-d" d="M664 64 A48 48 0 0 1 664 160 V128 A16 16 0 0 0 664 96 Z"/>
+      <path id="05-S-e" d="M600 128 H664 V160 H600 Z"/>
+    </g>
+    <g id="L06-O">
+      <path id="06-O-a" d="M820 0 A80 80 0 0 0 740 80 H772 A48 48 0 0 1 820 32 Z"/>
+      <path id="06-O-b" d="M820 0 V32 A48 48 0 0 1 868 80 H900 A80 80 0 0 0 820 0 Z"/>
+      <path id="06-O-c" d="M900 80 A80 80 0 0 1 820 160 V128 A48 48 0 0 0 868 80 Z"/>
+      <path id="06-O-d" d="M820 160 A80 80 0 0 1 740 80 H772 A48 48 0 0 0 820 128 Z"/>
+    </g>
+    <g id="L07-U">
+      <path id="07-U-a" d="M928 0 H960 V104 H928 Z"/>
+      <path id="07-U-b" d="M1008 0 H1040 V104 H1008 Z"/>
+      <path id="07-U-c" d="M928 104 A56 56 0 0 0 1040 104 H1008 A24 24 0 0 1 960 104 Z"/>
+    </g>
+    <g id="L08-R">
+      <path id="08-R-a" d="M1068 0 H1100 V160 H1068 Z"/>
+      <path id="08-R-b" d="M1100 0 H1132 V32 H1100 Z"/>
+      <path id="08-R-c" d="M1132 0 A48 48 0 0 1 1132 96 V64 A16 16 0 0 0 1132 32 Z"/>
+      <path id="08-R-d" d="M1100 64 H1132 V96 H1100 Z"/>
+      <path id="08-R-e" d="M1116 96 H1152 L1180 160 H1144 Z"/>
+    </g>
+    <g id="L09-C">
+      <path id="09-C-a" d="M1288 0 A80 80 0 0 0 1208 80 H1240 A48 48 0 0 1 1288 32 Z"/>
+      <path id="09-C-b" d="M1288 160 A80 80 0 0 1 1208 80 H1240 A48 48 0 0 0 1288 128 Z"/>
+      <path id="09-C-c" d="M1288 0 H1336 V32 H1288 Z"/>
+      <path id="09-C-d" d="M1288 128 H1336 V160 H1288 Z"/>
+    </g>
+    <g id="L10-E">
+      <path id="10-E-a" d="M1364 0 H1396 V160 H1364 Z"/>
+      <path id="10-E-b" d="M1396 0 H1468 V32 H1396 Z"/>
+      <path id="10-E-c" d="M1396 64 H1456 V96 H1396 Z"/>
+      <path id="10-E-d" d="M1396 128 H1468 V160 H1396 Z"/>
+    </g>
+  </g>
+  <circle id="o-counter" cx="820" cy="80" r="48" fill="none"/>
+</svg>

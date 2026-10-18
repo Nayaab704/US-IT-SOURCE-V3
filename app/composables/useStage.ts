@@ -42,7 +42,7 @@ export interface RegisterOptions {
    * ScrollTrigger start/end for scrollProgress. Default measures the whole crossing
    * ('top bottom' → 'bottom top'); a pinned scene usually wants 'top top' → 'bottom bottom'.
    */
-  progress?: { start: string; end: string }
+  progress?: { start: string | (() => string); end: string | (() => string) }
 }
 
 /** Tweakable stage-wide parameters (wired to Tweakpane in dev). */
