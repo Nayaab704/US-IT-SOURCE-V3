@@ -9,6 +9,22 @@ let panePromise: Promise<Pane> | null = null
  */
 export function useDevPane(): Promise<Pane | null> {
   if (!import.meta.dev || !import.meta.client) return Promise.resolve(null)
-  panePromise ??= import('tweakpane').then(({ Pane }) => new Pane({ title: 'Dev', expanded: false }))
+  panePromise ??= import('tweakpane').then(({ Pane }) => {
+    const pane = new Pane({ title: 'Dev', expanded: false })
+    // Tweakpane's default wrapper is position:absolute with no z-index: the fixed site nav
+    // covered it (unclickable) and it scrolled away with the page. Pin it above everything.
+    const wrapper = pane.element.parentElement
+    if (wrapper) {
+      Object.assign(wrapper.style, {
+        position: 'fixed',
+        zIndex: '10000',
+        maxHeight: 'calc(100vh - 16px)',
+        overflowY: 'auto',
+      } satisfies Partial<CSSStyleDeclaration>)
+      // Let the wheel scroll the panel itself instead of Lenis scrolling the page.
+      wrapper.setAttribute('data-lenis-prevent', '')
+    }
+    return pane
+  })
   return panePromise
 }

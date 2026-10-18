@@ -28,6 +28,8 @@ onMounted(async () => {
   // Several scenes may draw in one frame: clear once ourselves, and count draw calls for the whole frame.
   renderer.autoClear = false
   renderer.info.autoReset = false
+  // Shader error checks force synchronous GPU queries on every compile — dev only (three.js advice).
+  renderer.debug.checkShaderErrors = isDev
   attachRenderer(renderer)
   ownsRenderer = true
 

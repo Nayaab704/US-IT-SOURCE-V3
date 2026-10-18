@@ -33,10 +33,36 @@ let initialised = false
 function onMove(e: PointerEvent) {
   state.x = (e.clientX / window.innerWidth) * 2 - 1
   state.y = -((e.clientY / window.innerHeight) * 2 - 1)
+  if (!state.inside) snapToCurrent()
   state.inside = true
 }
 
+// Entering the window (or a new touch) starts a new stroke: the jump from the last known
+// position is not movement, and must not register as a velocity spike.
+function snapToCurrent() {
+  state.smoothX = state.x
+  state.smoothY = state.y
+  lastX = state.x
+  lastY = state.y
+  state.vx = state.vy = state.speed = 0
+}
+
 function onLeave() {
+  state.inside = false
+}
+
+// Touch: pointermove is cancelled as soon as the browser starts scrolling, but passive
+// touchmove keeps firing — so a drag still pushes things while the page scrolls.
+function onTouch(e: TouchEvent) {
+  const t = e.touches[0]
+  if (!t) return
+  state.x = (t.clientX / window.innerWidth) * 2 - 1
+  state.y = -((t.clientY / window.innerHeight) * 2 - 1)
+  if (e.type === 'touchstart' || !state.inside) snapToCurrent()
+  state.inside = true
+}
+
+function onTouchEnd() {
   state.inside = false
 }
 
@@ -72,6 +98,10 @@ export function usePointer(): Readonly<PointerState> {
     initialised = true
     window.addEventListener('pointermove', onMove, { passive: true })
     document.documentElement.addEventListener('pointerleave', onLeave)
+    window.addEventListener('touchstart', onTouch, { passive: true })
+    window.addEventListener('touchmove', onTouch, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true })
   }
   return state
 }

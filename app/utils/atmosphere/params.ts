@@ -124,7 +124,7 @@ const night: AtmosphereParams = {
 // Note: 0.9 internal scale costs ~9–10 ms/frame on Iris Xe vs ~5 ms at 0.6.
 const hero: AtmosphereParams = {
   quality: { internalScale: 0.9, octaves: 3 },
-  timeScale: 4,
+  timeScale: 4.9,
   base: { top: '#3d10e9', bottom: '#04060c', variation: 0.62 },
   fog: {
     scale: 1.36,
