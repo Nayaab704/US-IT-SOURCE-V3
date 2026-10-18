@@ -10,6 +10,7 @@ import {
   MeshPhysicalMaterial,
   AdditiveBlending,
   NormalBlending,
+  PointLight,
   OrthographicCamera,
   PerspectiveCamera,
   PlaneGeometry,
@@ -31,6 +32,7 @@ import type { StageScene } from '~/composables/useStage'
 import { loadShader } from '~/utils/shaders'
 import { curvedPath, pieceTiming, type PieceTiming } from './assembly'
 import { parseLogotype, type Logotype } from './logotype'
+import { exitCamera, heroExitParams, smoothstep, type ExitCamera, type ScreenCircle } from '~/utils/hero/exit'
 import { piecesParams as params, type PiecesParams } from './params'
 import { PieceSimulation, type Body, type PointerField } from './physics'
 import { buildPieceGeometry } from './shapes'
@@ -48,6 +50,8 @@ export interface PiecesSceneOptions {
   svg?: string
   /** Live link to the atmosphere's key light, so pieces and fog share one light source. */
   keyLight?: () => KeyLightSource
+  /** Colour of the daylight behind the O's counter (hero exit) — the O's inner bevels catch it. */
+  apertureColor?: () => string
 }
 
 export interface PiecesScene extends StageScene {
@@ -58,6 +62,10 @@ export interface PiecesScene extends StageScene {
   setAssembly(p: number): void
   /** A named marker from the SVG (e.g. 'o-counter') in world space at the assembled position. */
   getMarker(id: string): { center: Vector3; radius: number } | null
+  /** Hero exit progress e (0–1): camera push into the O's counter. Applied immediately. */
+  setExit(e: number): void
+  /** The O's counter as a circle on screen for the current camera (CSS px, from top-left). */
+  apertureScreen(): ScreenCircle | null
 }
 
 const FOV = 30
@@ -120,7 +128,10 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
   const aluminium = new MeshPhysicalMaterial({ metalness: 1 })
   const ceramic = new MeshPhysicalMaterial({ metalness: 0 })
   const key = new DirectionalLight()
-  scene.add(key, key.target)
+  // Warm daylight at the O's counter during the exit. Always present (intensity 0 otherwise) so it
+  // never triggers a shader recompile.
+  const apertureLight = new PointLight(0xffffff, 0, 1, 2)
+  scene.add(key, key.target, apertureLight)
 
   // Depth of field: sharp pieces go straight to the (antialiased) canvas; a soft low-res pass + CoC from
   // real depth are blended over them only where something is out of focus (see pieces-composite.frag).
@@ -136,6 +147,10 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
       uFocusDistance: { value: CAMERA_Z },
       uDofStart: { value: params.dof.start },
       uDofEnd: { value: params.dof.end },
+      uRadialCenter: { value: new Vector2() },
+      uRadialAmount: { value: 0 },
+      uRadialStart: { value: 1 },
+      uRadialEnd: { value: 4 },
     },
   })
   // Seam sweep: additive band drawn over the visible piece surfaces (depth-tested, no depth write).
@@ -166,6 +181,8 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
       uExposure: { value: 1 },
       uFarDim: { value: params.look.farDim },
       uFarOpacity: { value: params.look.farOpacity },
+      uZoomCenter: { value: new Vector2(0.5, 0.5) },
+      uZoomAmount: { value: 0 },
     },
     transparent: true,
     premultipliedAlpha: true,
@@ -192,6 +209,12 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
   let homeCap = 1
   let homeCenterY = 0
   let hovered: Piece | null = null
+  // Hero exit: progress, the counter (world, at the assembled position) and the camera push state.
+  let exitE = 0
+  let exitCam: ExitCamera = { s: 0, f: 0, velocity: 0 }
+  const counterCenter = new Vector3()
+  let counterRadius = 0
+  let hasCounter = false
 
   const field: PointerField = {
     active: false,
@@ -244,8 +267,28 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
     const scales = [L.nearScale, L.midScale, L.farScale]
 
     const geometries: { geometry: BufferGeometry; ceramic: boolean }[] = []
+    // Pieces around a marker (e.g. the O around its counter) are what the camera flies into on the
+    // exit — at ~25× magnification 12 segments read as facets, so they get finer arcs.
+    const markers = [...logotype.markers.values()]
+    const nearMarker = (shapes: (typeof logotype.pieces)[number]['shapes']) => {
+      let minX = Infinity
+      let minY = Infinity
+      let maxX = -Infinity
+      let maxY = -Infinity
+      for (const s of shapes)
+        for (const pt of s.getPoints(4)) {
+          minX = Math.min(minX, pt.x)
+          minY = Math.min(minY, pt.y)
+          maxX = Math.max(maxX, pt.x)
+          maxY = Math.max(maxY, pt.y)
+        }
+      const cx = (minX + maxX) / 2
+      const cy = (minY + maxY) / 2
+      return markers.some((m) => Math.hypot(cx - m.x, cy - m.y) < m.radius * 2.2)
+    }
     const drafts = logotype.pieces.map((lp, i) => {
       const g = buildPieceGeometry(lp.shapes, {
+        curveSegments: nearMarker(lp.shapes) ? 64 : 12,
         unitsPerPx: 1 / capPx, // 1 unit = cap height; the assembled size is applied as instance scale
         depth: params.geometry.depth,
         bevel: params.geometry.bevel,
@@ -360,6 +403,58 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
       b.mass = Math.max(b.radius * b.radius, 0.05)
       b.inertia = 0.4 * b.mass * b.radius * b.radius
     }
+    // The counter moves with the layout; the camera push is defined relative to it.
+    const counter = getMarker('o-counter')
+    hasCounter = counter !== null
+    if (counter) {
+      counterCenter.copy(counter.center)
+      counterRadius = counter.radius
+    }
+    applyCamera()
+  }
+
+  /** Camera for the current exit progress. Desktop only — phones keep the camera and use a wipe. */
+  function applyCamera() {
+    if (!hasCounter || isMobile || reducedMotion.value || exitE <= 0) {
+      camera.position.set(0, 0, CAMERA_Z)
+      exitCam = { s: 0, f: 0, velocity: 0 }
+    } else {
+      exitCam = exitCamera(exitE, counterCenter, counterRadius, CAMERA_Z, camera.position)
+    }
+    // Straight on: the camera only translates — no roll, no tilt.
+    camera.updateMatrixWorld()
+  }
+
+  /** How strongly neighbouring letters defocus: follows the push. */
+  function radialAmount() {
+    return isMobile ? 0 : smoothstep(0, 0.5, exitCam.f)
+  }
+
+  const _proj = new Vector3()
+  function apertureScreen(): ScreenCircle | null {
+    if (!hasCounter) return null
+    _proj.copy(counterCenter).project(camera)
+    const x = ((_proj.x + 1) / 2) * width
+    const y = ((1 - _proj.y) / 2) * height
+    // Straight-on camera: the counter stays a circle; its radius from the perspective scale.
+    const distance = camera.position.z - counterCenter.z
+    const r = (counterRadius / (distance * TAN_HALF)) * (height / 2)
+    return { x, y, r }
+  }
+
+  /** Warm aperture light + zoom blur, both following the push. */
+  function syncExitExtras() {
+    const X = heroExitParams
+    const glow = isMobile ? 0 : smoothstep(X.pushStart, X.pushEnd, exitE)
+    apertureLight.intensity = X.lightIntensity * glow
+    apertureLight.position.set(counterCenter.x, counterCenter.y, counterCenter.z + counterRadius * 0.35)
+    apertureLight.distance = counterRadius * X.lightRange
+    apertureLight.color.set(options.apertureColor?.() ?? '#ffeedd')
+    const u = compositeMaterial.uniforms
+    const zoom = X.zoomBlur && !isMobile ? Math.min(0.03, X.zoomBlurStrength) * exitCam.velocity : 0
+    u.uZoomAmount!.value = zoom
+    const c = apertureScreen()
+    if (c) (u.uZoomCenter!.value as Vector2).set(c.x / width, 1 - c.y / height)
   }
 
   const _axis = new Vector3()
@@ -375,6 +470,11 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
     _keyDir.copy(key.position).normalize()
     // Tilting about this axis turns a piece's face toward the key light.
     _axis.set(0, 0, 1).cross(_keyDir).normalize()
+    // Exit push: letters soften with lateral distance from the counter (mirrors pieces-coc.vert).
+    const X = heroExitParams
+    const radial = hasCounter ? radialAmount() : 0
+    const r0 = X.radialDofStart * homeCap
+    const r1 = X.radialDofEnd * homeCap
     let maxCoc = 0
     for (const p of pieces) {
       const b = p.body
@@ -400,6 +500,10 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
       const behind = A.homeZ - p.pos.z
       const x = Math.min(1, Math.max(0, (behind - D.start) / Math.max(D.end - D.start, 1e-4)))
       p.coc = x * x * (3 - 2 * x)
+      if (radial > 0) {
+        const lateral = Math.hypot(p.pos.x - counterCenter.x, p.pos.y - counterCenter.y)
+        p.coc = Math.max(p.coc, radial * smoothstep(r0, r1, lateral))
+      }
       maxCoc = Math.max(maxCoc, p.coc)
       p.batch.setMatrixAt(p.instance, _m.compose(p.pos, p.quat, _s.setScalar(p.scale)))
     }
@@ -422,7 +526,7 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
   const _ndc = new Vector2()
   function updateHover(delta: number) {
     const H = params.hover
-    const live = !isMobile && !reducedMotion.value && progress >= H.from && pointer.inside
+    const live = !isMobile && !reducedMotion.value && progress >= H.from && exitE <= 0 && pointer.inside
     hovered = null
     if (live) {
       _ndc.set(pointer.x, pointer.y)
@@ -485,13 +589,19 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
     ceramic.clearcoatRoughness = L.ceramic.clearcoatRoughness
     scene.environmentIntensity = L.envIntensity
     const cu = cocMaterial.uniforms
-    cu.uFocusDistance!.value = CAMERA_Z - params.assembly.homeZ
+    // Focus stays on the logotype plane wherever the camera is.
+    cu.uFocusDistance!.value = camera.position.z - params.assembly.homeZ
+    ;(cu.uRadialCenter!.value as Vector2).set(counterCenter.x, counterCenter.y)
+    cu.uRadialAmount!.value = hasCounter ? radialAmount() : 0
+    cu.uRadialStart!.value = heroExitParams.radialDofStart * homeCap
+    cu.uRadialEnd!.value = heroExitParams.radialDofEnd * homeCap
     cu.uDofStart!.value = params.dof.start
     cu.uDofEnd!.value = params.dof.end
     const u = compositeMaterial.uniforms
     u.uFarDim!.value = L.farDim
     u.uFarOpacity!.value = L.farOpacity
     u.uExposure!.value = renderer?.toneMappingExposure ?? 1
+    syncExitExtras()
   }
 
   function syncTargets() {
@@ -650,6 +760,16 @@ export function createPiecesScene(options: PiecesSceneOptions = {}): PiecesScene
     },
 
     getMarker,
+
+    setExit(e) {
+      exitE = Math.min(1, Math.max(0, e))
+      // Deep in the push most letters are off screen: cull per instance then (it costs a draw-list
+      // rebuild per pass, which only pays off while pieces actually leave the frame).
+      for (const b of batches) b.perObjectFrustumCulled = exitE > 0
+      applyCamera()
+    },
+
+    apertureScreen,
 
     init(ctx) {
       renderer = ctx.renderer

@@ -12,6 +12,8 @@ export interface PieceGeometryOptions {
    * dimension; a logotype passes its cap height so every fragment has the same thickness.
    */
   referenceSize?: number
+  /** Arc tessellation (default 12). Pieces the camera flies close to need more. */
+  curveSegments?: number
 }
 
 export interface PieceGeometry {
@@ -43,7 +45,7 @@ export function buildPieceGeometry(shapes: Shape[], opts: PieceGeometryOptions):
     bevelOffset: -bevel, // keep the outline's footprint: the bevel eats inward, not outward
     // Modest tessellation: arcs are small on screen and every pass pays for each vertex.
     bevelSegments: 2,
-    curveSegments: 12,
+    curveSegments: opts.curveSegments ?? 12,
   })
   // SVG is y-down. Flipping y and z together is a 180° rotation, so winding (and normals) stay valid.
   geometry.scale(opts.unitsPerPx, -opts.unitsPerPx, -opts.unitsPerPx)

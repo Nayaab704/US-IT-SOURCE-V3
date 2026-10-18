@@ -32,6 +32,8 @@ export interface StageScene {
   setActive(active: boolean): void
   /** Optional: how much of this scene is visible in the current world (0–1), set before update(). */
   setWorldWeight?(weight: number): void
+  /** Optional: render even while this scene's world is out of view (e.g. a day glimpse through the night). */
+  forceRender?(): boolean
   /** Release every geometry, material, texture and render target the scene created. */
   dispose(): void
 }
@@ -128,7 +130,7 @@ const frame: gsap.TickerCallback = (time, deltaMs) => {
   for (const e of drawList) {
     // Night scenes fade out as the world turns to day and vice versa; invisible scenes cost nothing.
     const weight = e.world === 'day' ? world : 1 - world
-    if (weight < WORLD_EPSILON) continue
+    if (weight < WORLD_EPSILON && !e.scene.forceRender?.()) continue
     e.scene.setWorldWeight?.(weight)
     e.scene.update(time, delta, e.progress.progress, pointer)
     e.scene.render(r)
@@ -389,7 +391,7 @@ function bench(frames = 120): number {
       const world = getWorld()
       for (const e of drawList) {
         const weight = e.world === 'day' ? world : 1 - world
-        if (weight < WORLD_EPSILON) continue
+        if (weight < WORLD_EPSILON && !e.scene.forceRender?.()) continue
         e.scene.setWorldWeight?.(weight)
         e.scene.update(i / 60, 1 / 60, e.progress.progress, pointer)
         e.scene.render(r)

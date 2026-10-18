@@ -17,6 +17,7 @@ import {
 import type { FolderApi } from 'tweakpane'
 import type { StageScene } from '~/composables/useStage'
 import { loadShader } from '~/utils/shaders'
+import type { Aperture } from '~/utils/hero/exit'
 import {
   applyDayMobileOverrides,
   assignDayParams,
@@ -30,6 +31,10 @@ export interface DayScene extends StageScene {
   applyPreset(name: DayPresetName): void
   /** Dev/testing: start a passing cloud now (deepest variant). */
   triggerCloud(): void
+  /** A screen circle through which the day shows while the world is still night (hero exit). */
+  setApertureSource(source: (() => Aperture | null) | null): void
+  /** The warm light on the paper (paper × light tint), sRGB hex — for objects lit by the window. */
+  warmLightHex(): string
 }
 
 const TAU = Math.PI * 2
@@ -96,6 +101,14 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
     uDither: u(1),
     uFrame: u(0),
     uOpacity: u(1),
+    uMask: u(0),
+    uMaskCenter: u(new Vector2()),
+    uMaskRadius: u(0),
+    uMaskFeather: u(2),
+    uMaskIntensity: u(0),
+    uBloom: u(0),
+    uBloomWidth: u(16),
+    uBloomColor: u(new Vector3(1, 0.95, 0.88)),
   }
   const compositeMaterial = new ShaderMaterial({
     vertexShader,
@@ -118,6 +131,12 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
   let elapsed = 0
   let frame = 0
   let pane: FolderApi | null = null
+
+  // Aperture (hero exit): the day seen through a circle while the world is still night.
+  let apertureSource: (() => Aperture | null) | null = null
+  let aperture: Aperture | null = null
+  // CSS px, origin bottom-left — restricts both passes to the circle while it is small.
+  let scissor: { x: number; y: number; w: number; h: number } | null = null
 
   // Clouds: random gaps, random depth, smooth envelope.
   let nextCloud = 0
@@ -215,6 +234,41 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
     c.uFibreScale.value = p.paper.fibreScale
     c.uGrain.value = p.post.grain
     c.uDither.value = p.post.dither ? 1 : 0
+  }
+
+  const bloomColor = new Color()
+  function syncAperture() {
+    const c = compositeUniforms
+    const a = aperture
+    scissor = null
+    if (!a || !renderer) {
+      c.uMask.value = 0
+      return
+    }
+    const dpr = renderer.getPixelRatio()
+    c.uMask.value = 1
+    c.uMaskCenter.value.set(a.x * dpr, (height - a.y) * dpr)
+    c.uMaskRadius.value = a.r * dpr
+    c.uMaskFeather.value = Math.max(a.feather, 0.5) * dpr
+    c.uMaskIntensity.value = a.intensity
+    c.uBloom.value = a.bloom
+    c.uBloomWidth.value = a.bloomWidth * dpr
+    bloomColor.set(scene.warmLightHex())
+    // The shader blends in display space, so hand it sRGB components.
+    bloomColor.convertLinearToSRGB()
+    c.uBloomColor.value.set(bloomColor.r, bloomColor.g, bloomColor.b)
+
+    // While only the circle is visible and it's small, restrict both passes to its bounding box.
+    if (c.uOpacity.value < 0.002) {
+      const reach = a.r + a.feather + (a.bloom > 0 ? 3 * a.bloomWidth : 0) + 6
+      const x0 = Math.max(0, a.x - reach)
+      const x1 = Math.min(width, a.x + reach)
+      const top = Math.max(0, a.y - reach)
+      const bottom = Math.min(height, a.y + reach)
+      if (x1 > x0 && bottom > top && (x1 - x0) * (bottom - top) < 0.6 * width * height) {
+        scissor = { x: x0, y: height - bottom, w: x1 - x0, h: bottom - top }
+      }
+    }
   }
 
   function applyPreset(name: DayPresetName) {
@@ -319,6 +373,26 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
       compositeUniforms.uOpacity.value = weight
     },
 
+    setApertureSource(source) {
+      apertureSource = source
+    },
+
+    // The stage asks this when the world is still night: draw anyway if the aperture shows some day.
+    forceRender() {
+      aperture = apertureSource?.() ?? null
+      return aperture !== null
+    },
+
+    warmLightHex() {
+      tmp.set(params.paper.color)
+      const pr = tmp.r
+      const pg = tmp.g
+      const pb = tmp.b
+      const warm = new Vector3()
+      tintMultiplier(params.light.tint, 1 + params.light.intensity, warm)
+      return `#${tmp.setRGB(pr * warm.x, pg * warm.y, pb * warm.z).getHexString()}`
+    },
+
     update(_time, delta) {
       // Reduced motion: frozen light, composed at t = 0, no clouds, no parallax.
       const frozen = reducedMotion.value
@@ -332,13 +406,27 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
       }
       syncUniforms(frozen)
       syncTarget()
+      aperture = apertureSource?.() ?? null
+      syncAperture()
     },
 
     render(r) {
+      const sc = scissor
+      if (sc) {
+        // Only the circle's neighbourhood of the light pass is needed (RT pixels, origin bottom-left).
+        const s = r.getPixelRatio() * params.quality.internalScale
+        target.scissor.set(Math.floor(sc.x * s), Math.floor(sc.y * s), Math.ceil(sc.w * s) + 2, Math.ceil(sc.h * s) + 2)
+      }
+      target.scissorTest = sc !== null
       r.setRenderTarget(target)
       r.render(lightScene, camera)
       r.setRenderTarget(null)
+      if (sc) {
+        r.setScissor(sc.x, sc.y, sc.w, sc.h)
+        r.setScissorTest(true)
+      }
       r.render(compositeScene, camera)
+      if (sc) r.setScissorTest(false)
     },
 
     resize(w, h) {

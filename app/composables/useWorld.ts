@@ -31,9 +31,39 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t)
 }
 
-/** Current world value — a pure function of the scroll position, so it is reversible and in sync with Lenis. */
+/**
+ * A scene-driven transition (e.g. the hero's aperture) can take over the world while it runs.
+ * `ink` drives DOM colour; `render` decides which atmospheres draw — they can differ, e.g. ink
+ * switches at 50% coverage while the night keeps rendering until it is fully covered.
+ */
+export type WorldOverride = () => { ink: number; render: number } | null
+let override: WorldOverride | null = null
+let running = false
+
+export function setWorldOverride(provider: WorldOverride | null) {
+  override = provider
+  if (provider && !running) start()
+  else if (!provider && running && sections.length === 0) stop()
+}
+
+/** World for rendering (stage weights). Reversible: a pure function of scroll / the override. */
 export function getWorld(): number {
   if (import.meta.dev && worldParams.override) return worldParams.value
+  const o = override?.()
+  if (o) return o.render
+  return sectionWorld()
+}
+
+/** World for DOM ink (`--world`). */
+export function getInkWorld(): number {
+  if (import.meta.dev && worldParams.override) return worldParams.value
+  const o = override?.()
+  if (o) return o.ink
+  return sectionWorld()
+}
+
+/** World from the page's `[data-world]` sections and the scroll position. */
+function sectionWorld(): number {
   if (!import.meta.client || sections.length === 0) return 0
   const scroll = window.scrollY
   const half = (worldParams.band * window.innerHeight) / 2
@@ -49,13 +79,15 @@ export function getWorld(): number {
 }
 
 const tick = () => {
-  const w = getWorld()
+  const w = getInkWorld()
   if (Math.abs(w - written) < 0.0005) return
   written = w
   document.documentElement.style.setProperty('--world', w.toFixed(4))
 }
 
 function start() {
+  if (running) return
+  running = true
   gsap.ticker.add(tick)
   if (import.meta.dev) {
     void useDevPane().then((pane) => {
@@ -75,6 +107,8 @@ function start() {
 }
 
 function stop() {
+  if (!running) return
+  running = false
   gsap.ticker.remove(tick)
   paneFolder?.dispose()
   paneFolder = null
@@ -94,7 +128,7 @@ export function useWorldSections() {
       world: el.dataset.world === 'day' ? 1 : 0,
       trigger: ScrollTrigger.create({ trigger: el, start: 'top center', end: 'bottom center' }),
     }))
-    if (sections.length === 0 && own.length > 0) start()
+    if (own.length > 0) start()
     sections.push(...own)
     tick()
   })
@@ -102,6 +136,6 @@ export function useWorldSections() {
     own.forEach((s) => s.trigger.kill())
     sections = sections.filter((s) => !own.includes(s))
     own = []
-    if (sections.length === 0) stop()
+    if (sections.length === 0 && !override) stop()
   })
 }
