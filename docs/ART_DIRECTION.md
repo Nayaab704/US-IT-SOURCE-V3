@@ -1,24 +1,30 @@
-# US IT Source — Art Direction (source of truth)
+# US IT Source — Art Direction (source of truth, v2)
 
 This document is decided by the project owner. The coding agent implements it and does not change it. Anything marked **[TBD]** must be asked about, not invented.
 
+> **v2 replaces v1 entirely.** Retired concepts — do NOT use: stencil/constructed logotype, floating aluminium pieces, logotype assembly, seam sweep, the O-aperture exit, the services card deck, foggy/glowing night atmosphere behind objects.
+
 ---
 
-## 1. Master idea: "Built to fit"
+## 1. The rule: "The Map"
 
-We don't change how a business works — we build software that follows it.
+US IT Source maps how a client's business works and builds software that follows that map. **The website itself is one large workflow map, and every page is a place on it.**
 
-Two recurring visual motifs:
+- Every page is a **tile** on the map, connected by **the line**.
+- Every page opens from, and closes back into, a **rounded rectangle** (its tile).
+- Moving between pages always means **travelling along the line** — never a fade, never a wipe.
+- Pages have real URLs (SEO), but the experience feels like one continuous place.
 
-- **The Piece** — precision-cut flat parts (like sheet material cut for nesting) that fit together exactly. Born in the hero, reappear in the Material Nesting chapter and the Contact scene.
-- **The Line** — the client's real workflow. It starts hand-drawn and messy, then becomes engineered and precise **while keeping the same shape**.
+**Formula: Metalab's frame, Lusion's matter.**
+- The *frame* (structure, navigation, typography, pacing): calm, editorial, restrained.
+- The *matter* (what you see and touch): physical, glossy, liquid, crafted.
 
-Two atmospheres that alternate:
-
-- **Night** — deep ink-blue, cinematic, rendered light in atmosphere (WebGL). Premium, Fantasy-like dynamic range. Text crisp and luminous through contrast, never glow.
-- **Day** — warm paper and ink, editorial, human. Calm. Light moves across it like window shadow.
-
-Moving between night and day *is* a transition.
+### The one material: the line
+The same line appears in every form:
+- On paper → a vermilion **hand-drawn ink line** (human, the client's real workflow).
+- In the dark → a **black-lacquer ribbon** sculpture (engineered, premium).
+- On the map → the thin **route** connecting pages.
+- Engineered → a crisp interface line with the **same shape** as the hand line.
 
 ---
 
@@ -27,130 +33,110 @@ Moving between night and day *is* a transition.
 ### Color
 | Token | Value | Use |
 |---|---|---|
-| `--night-0` | `#04060C` | deepest black-blue |
-| `--night-1` | `#0A1222` | base night |
-| `--night-2` | `#18284A` | lit night |
-| `--night-light` | `#4A6BA3` | light volumes in fog (WebGL) |
-| `--night-violet` | `#3D10E9` | hero atmosphere upper field (owner-tuned, 2026-10-18) |
-| `--night-light-violet` | `#1E0EDC` | hero atmosphere key light (owner-tuned, 2026-10-18) |
+| `--void` | `#020306` | night background — near-pure black. No fog, no glow. |
+| `--night-1` | `#0A0E18` | raised night surfaces (pill nav, map canvas) |
+| `--rim` | `#3B5BFF` | electric ink-blue — the ONLY saturated light colour; appears as reflections/route light |
+| `--warm-glint` | `#F0C58C` | tiny warm accent in reflections only |
 | `--night-text` | `#F2F1EC` | primary text on night |
-| `--night-muted` | `#8B93A3` | labels on night |
+| `--night-muted` | `#8E95A4` | secondary text on night |
 | `--paper` | `#F1EEE7` | day ground |
 | `--paper-raised` | `#FBFAF6` | chips/cards on paper |
 | `--ink` | `#16181D` | text on day |
-| `--ink-muted` | `#6B655B` | labels on day |
-| `--signal` | `#D9481F` | the hand-drawn line ONLY (vermilion). Never used as a general accent. |
+| `--ink-muted` | `#5E5950` | secondary text on day |
+| `--signal` | `#D9481F` | the hand-drawn line ONLY |
 
-Materials (WebGL): brushed aluminium, matte ceramic (`#F1EFEA` base), graphite, anodized ink-blue, warm sand.
-
-### Type
-- **Geist** (300/400/500/600) — primary UI and night headlines.
-- **Instrument Serif** (regular + italic) — editorial headlines on day scenes, project titles, human moments.
-- **Geist Mono** (400/500) — small technical labels, section indexes (`02 — THE WAY YOU ACTUALLY WORK`), tracked +0.14–0.16em, uppercase.
-- Self-host fonts (`@nuxt/fonts` or local files). No Inter/Roboto/Arial.
+### Typography — "Engineered Classic" (approved)
+- **Newsreader** (display optical size, weight 300; italic 300) — headlines, statements, project titles, inline-image sentences. Tight leading (0.94–1.0), letter-spacing −0.02em at large sizes.
+- **Geist** (300–600) — body, paragraphs, UI, pills, nav.
+- **Geist Mono** (400–500) — small technical labels and indexes, uppercase, tracked +0.14–0.16em.
+- Self-host all fonts. No Inter / Roboto / Arial / Instrument Serif in the final site.
+- Hero scale: Newsreader 300, ~104px at 1440w, two lines, second line indented 1.6em.
 
 ### Layout
-- Desktop reference frame 1440×900. Side gutter 56px desktop, 20px mobile.
-- Each homepage scene is a full-viewport **scene**, many pinned (sticky) — not ordinary stacked sections.
+- Desktop reference 1440×900. Gutter 56px desktop, 20px mobile.
+- Generous black / paper space. Each page has ONE main move; everything else is quiet.
 
 ---
 
 ## 3. Motion system
 
-- **Level 1 — always alive, almost invisible:** atmospheric drift, slow light movement, subtle cursor response, fine animated grain.
-- **Level 2 — scroll choreography:** reveals, line drawing, type transitions, card transforms.
-- **Level 3 — signature (only these four):** Hero pieces/assembly, Services deck, Vision lens, Contact pieces bookend.
+- **Level 1 (always, almost invisible):** slow reflection drift on the ribbon, window light on paper, cursor dot lag, fine grain.
+- **Level 2 (scroll choreography):** parallax rows, sticky lists, text rises, line drawing, inline-media sentences.
+- **Level 3 (signature — only these):**
+  1. **The Map** (menu + page travel)
+  2. **The ribbon breaking open** and the camera flying inside it into daylight
+  3. **The service object** reshaping for each service
 
 ### Feel
-- Easing default: `power3.out` for entrances, `power2.inOut` for scrubbed transforms. No bounce, no elastic, no back easing.
-- **Thick-fluid feel** (cursor & objects): cursor follow lerp ≈ 0.08–0.12 per frame; objects react to cursor **velocity**, high linear drag, very low restitution, slow angular damping. Things drift and settle — they never bounce like toys.
+- Entrances `power3.out`; scrubbed transforms `power2.inOut`. No bounce, elastic or back easing.
+- **Thick-fluid:** cursor lerp 0.08–0.12; reactions driven by pointer velocity; heavy damping; things settle, never bounce.
 
-### Signature transition: text passing behind glass
-Outgoing text does **not** just fade. As a line of text rises past an invisible frosted-glass horizon (≈ top 18–25% of the viewport):
-1. it blurs progressively **line by line** (0 → ~10px), not all at once;
-2. a very slight vertical stretch and refraction offset (1–3px) as it crosses;
-3. a faint chromatic split on the edges (WebGL version only);
-4. it dims to ~0 as if behind something;
-5. a barely visible highlight line marks the glass edge only while text crosses it.
-Two implementations: **HTML version** (used broadly) and **WebGL version** (hero/key night scenes, real refraction).
+### Text exit: behind glass
+Outgoing text rises into a frosted-glass horizon: progressive per-line blur (0 → 10px), slight vertical stretch, dims to 0. (GlassText component.)
 
-### Signature transition: the drawn line (page transitions)
-Entering a case study, service page or About: a medium-thick line (8–14px at 1440w, slightly tapered ends) sweeps across the screen in a confident half-curve, then settles and becomes part of the new page (title underline / divider / that project's workflow path). Colors: `--signal` on day pages, `--night-text` on night pages.
+### The rectangle
+- **Opens:** a vertical line → narrow rounded portrait rectangle → taller → landscape card → full screen (corners → 0). The world behind is already in place; only the window moves. Camera inside settles back ~8% as it opens.
+- **Closes:** the reverse — the live page shrinks into its rounded rectangle.
 
 ---
 
-## 4. Homepage scenes (in order)
+## 4. The journey
 
-### 1A — Hero: pieces in fluid (Night · SIGNATURE)
-- WebGL atmosphere: fog + 2–3 soft light volumes, slow noise drift, tone-mapped, dithered, grain.
-- Thin extruded pieces = the logotype's own fragments (38 in the interim logotype — no extra decorative pieces), aluminium + ceramic materials, environment reflections, depth of field on distant pieces.
-- Cursor pushes pieces through a viscous medium.
-- Copy: nav + intro line **"Custom software, AI and computer vision — built for one business at a time."** + `SCROLL TO ASSEMBLE`.
+### 4.1 Opening (first visit)
+1. Warm paper with fine grain. Faint pencil-like words (Newsreader italic 28px, --ink, max opacity 0.22) appear and dissolve in turn: *We listen.* → *We map how you work.* → *Then we build it.*
+2. The ink line draws a short route across the paper (a hint of the map); its final stroke turns vertical at screen centre.
+3. That vertical line **opens** as the rectangle (§3) into the Home hero.
+Repeat visits in the same session: fast line → open only. Reduced motion: words static 1.2 s → crossfade.
 
-### 1B — Hero: built to fit
-- **Logotype (interim, v0.1):** `app/assets/logo/logotype-fragments.svg` — constructed logotype, 1468 × 160 units, 38 pieces. Every `<path>` with an id is ONE piece (id format `<letterIndex>-<letter>-<piece>`, e.g. `06-O-a`); every piece floats in 1A and assembles into its exact slot in 1B. `#o-counter` marks the O's inner circle (aperture for the exit, later phase). Any SVG following this contract can replace it without code changes.
-- Assembled logotype: width ≈ 76% of viewport width on desktop (88% mobile), centre at ~42% of viewport height; pieces extruded with uniform depth/bevel.
-- Headline: **"Technology built around the way your business works."** (Geist 300, ~54px at 1440w, `--night-text`), below the logotype.
-- Services line (mono): SOFTWARE & APPS · AI MODELING · COMPUTER VISION · STAFF AUGMENTATION · TRAINING
-- **Pacing** — scrubbed to scroll (scrub ≈ 1, no snapping, fully reversible). Hero pinned for 250vh (mobile 150vh). Progress p = 0 → 1:
-  - **0.00–0.12 free play.** Pieces still float; cursor still pushes them. Intro line and `SCROLL TO ASSEMBLE` exit through the glass (text-behind-glass, §3).
-  - **0.12–0.70 assembly.** Each piece travels from its current floating position to its slot along a gently curved path. Stagger: far-layer pieces start later; total spread ≈ 0.25 of the range. Rotation resolves to 0 in the last 30% of each piece's own travel (turns and "clicks" in). Easing per piece: power3.inOut. Cursor/fluid influence fades to 0 as a piece approaches home; depth-of-field blur fades to sharp as far pieces arrive.
-  - **0.62–0.74 seam light sweep.** A thin highlight travels left → right across the assembled logotype along the seams — a moving specular sweep, not a glow blob. One pass. (Desktop only.)
-  - **0.70–0.84 headline** rises in below the logotype, then the mono services line 0.04 later. Clean rise + fade, no blur.
-  - **0.84–1.00 hold.** Still, calm composition; the atmosphere keeps its slow Level-1 drift.
-  - After assembly (Level 1 only, desktop): hovering the logotype lifts the piece under the cursor ~1–2 units toward the camera and lets it catch a little more light. Nothing bigger.
-- Mobile (< 768px or coarse pointer): pinned 150vh, same sequence compressed; no seam sweep; no hover response.
-- Reduced motion: no pin; the assembled logotype + headline + services line as a static, lit composition.
-- Exit (later phase): camera pushes into the **O**; its counter holds warm daylight and becomes the aperture into Scene 2.
+### 4.2 Home — hero (night)
+- **The ribbon:** one black-lacquer ribbon swept along a 3D version of the Scene-2 workflow path (loops + one backtrack). Thick, deeply bevelled (width:thickness ≈ 3:1, bevel ≈ 35–40% of thickness). Cropped huge; ≥ 40% of screen stays black; depth of field on far sections.
+- **Light:** only reflections — procedural studio softboxes (two long electric-blue strips, one dim white overhead, one small warm kicker) in an otherwise black environment. Long saturated streaks slide slowly along the bevels.
+- **Liquid surface:** cursor ripples the surface (≤ 2% thickness) and bends the streaks; damped ~1.2 s.
+- **Type (Metalab-calm):** headline lower-left "Built around / the way you work." · top-right paragraph "US IT Source designs and builds custom software, AI and computer vision for businesses that don't fit off-the-shelf tools." · left column: five service pills (Software & Apps · AI Modeling · Computer Vision & ML · Staff Augmentation · Technical Training) · top-centre floating pill nav: Menu · US IT SOURCE · local time.
 
-### 2 — The way you actually work (Day · QUIET)
-- Headline (serif): "Every business has its own way of working." Sub: "Most software ignores it. We start by learning it."
-- Vermilion hand line draws with scroll, looping between labels: customer calls · whiteboard · spreadsheet_v7_FINAL · text the vendor · paper PO (lost?) · "who has the keys?" · invoice.
-- Cursor: hold & drag draws a wet-ink line that fades after ~3s.
+### 4.3 Home — the break (Lusion moment)
+On scroll the ribbon reveals precise cut seams (thin rim-blue light) and **parts into segments**; the camera flies **into the gap**, travelling along the ribbon's path between separating segments; warm daylight grows at the end; we emerge onto paper. Fully reversible.
 
-### 3 — How we work (Day · Level 2, pinned)
-Steps (approved):
-1. **Sit with the work** — we spend time with the people doing the job and collect what they use today.
-2. **Map the flow** — every step, handoff and exception; the client signs off: "yes, this is how we work."
-3. **Build to the map** — apps, trackers and dashboards follow the map exactly: your words, your fields, your order of steps.
-4. **Run it, then grow it** — roll out, train, adjust as the business changes.
-- The hand line becomes an engineered line with the **same shape**; labels become interface chips (Intake · Work order · Parts request · Purchase order · Labor · Delivered); faint ghost of the original remains.
-- Step 4: a light pulse travels the line; a new branch grows (Third-party repair).
-- Closing line: "You work A → D → B → F. Your software works A → D → B → F."
-- Exit: the line folds into a rectangle → first card of the deck.
+### 4.4 Home — "The way you actually work" (day, quiet)
+The same path as the ribbon, now a vermilion hand-drawn line on paper, looping between labels: customer calls · whiteboard · spreadsheet_v7_FINAL · text the vendor · paper PO (lost?) · "who has the keys?" · invoice. Headline (Newsreader): "Every business has its own way of working." Body: "Most software ignores it. We start by learning it." Cursor: hold & drag to draw fading ink. (Built in Phase 8; restyle to Newsreader.)
 
-### 4 — Services deck (Night · SIGNATURE)
-Five cards, five materials: 01 Software & Applications (graphite) · 02 AI Modeling (aluminium) · 03 Computer Vision & ML (ceramic) · 04 Staff Augmentation (anodized ink-blue) · 05 Technical Training (warm sand).
-- Starts as one thick stack → lifts and tilts to show thickness → fans → each card turns to face viewer → final arrangement.
-- Hover: card tilts toward cursor, light slides across surface.
-- WebGL cards, SDF text, hidden HTML. Fallback: CSS 3D.
-- Headline: "Five ways we fit around you."
+### 4.5 Home — "How we work" (day)
+Steps: 1 Sit with the work · 2 Map the flow · 3 Build to the map · 4 Run it, then grow it. The hand line becomes an engineered line with the **same shape**; labels → interface chips; light pulse; new branch grows. Closing line: "You work A → D → B → F. Your software works A → D → B → F."
 
-### 5 — Selected work (Night · Level 2+)
-- Vertical scroll drives horizontal chapters, one per project (must scale to N projects).
-- 01 Garage Automation (work-order line through Intake → Work order → Parts → Vendor·PO → Labor → Done; layered real screens). 02 Material Nesting Software (hero pieces nest onto a sheet). 03 Project Assembly Track (stages assemble; progress line).
-- Real redacted screenshots/recordings only — **[TBD] assets**.
-- Hover: liquid ripple on media; cursor becomes "View". Click: media expands into the case-study page.
+### 4.6 Home — inline-media sentence (day → night)
+Newsreader statement with real images inside the text, e.g. "Software [garage screen] built around [workshop photo] the way you work." Images are real and supplied **[TBD]**.
 
-### 6 — Vision & AI (Night · SIGNATURE)
-- Full-bleed real project photography **[TBD]**.
-- Cursor is a thick-glass lens: only inside it are outlines, labels and measurements visible. Rim refracts slightly.
-- Headline (serif): "AI is useful when it's built for a job you actually have."
-- Mobile: automatic scan sweep.
+### 4.7 What We Do (page + home teaser) — the service object (SIGNATURE)
+Dark. Services list scrolls on the left; on the right a sticky object in the same lacquer reshapes per service:
+- Software & Apps → ribbon folds into a clean grid
+- AI Modeling → a tangle slowly unknots
+- Computer Vision & ML → curls into a lens ring that focuses light
+- Staff Augmentation → a second ribbon joins seamlessly
+- Technical Training → rises in a guided spiral
+Cursor ripples remain.
 
-### 7 — People (Day · QUIET, deliberately)
-- "Your team, extended." / "Your team, trained." — the line underlines *extended*, circles *trained*.
-- Staff Augmentation: "Engineers who join your team, use your tools and follow your process."
-- Technical Training: "Hands-on training that leaves your people confident with the systems they run every day."
-- Link: About US IT Source →
+### 4.8 Work (page + home teaser)
+Three rows of **real project screens** move sideways with scroll, each at its own speed/direction. Hover: row slows; cursor becomes "View". Click: the screen grows to become the case-study page. Projects: Garage Automation · Material Nesting Software · Project Assembly Track (must scale to N). Assets **[TBD]** — redacted/demo-data screens only.
 
-### 8 — Conversation (Night · BOOKEND)
-- "Tell us how your business works." / "We'll show you what software built around it could look like." / [Start a conversation]
-- Pieces return as real 3D objects in fluid; cursor pushes them; hovering the CTA draws them into a slow orbit around it; clicking snaps them together into a complete shape before the form opens.
-- Footer: [EMAIL] · [LOCATION] · LinkedIn · © US IT Source.
+### 4.9 Case study pages
+Hero = the expanded screen. Inline-media sentences, sticky image + scrolling facts, workflow line of that project. Copy and assets **[TBD]**; nothing invented.
+
+### 4.10 About (page)
+Giant Newsreader line moving across with scroll: "From the shop floor to the dashboard." Staff Augmentation and Technical Training ("Your team, extended." / "Your team, trained.") live here and on the What We Do page. Further About copy **[TBD]**.
+
+### 4.11 Contact (page + home footer bookend)
+Night. The ribbon returns whole. "Tell us how your business works." / "We'll show you what software built around it could look like." / [Start a conversation]. As the cursor nears the button, the ribbon curls toward it. Footer: [EMAIL] · [LOCATION] · LinkedIn · © US IT Source.
+
+### 4.12 The Map (menu) — SIGNATURE
+- Press Menu anywhere → the live page **shrinks into its rounded rectangle**; the camera pulls out over a `--night-1` canvas revealing the whole map.
+- Main tiles: Home · What We Do · Work · About · Contact, connected by a thin route line. Branches: the five services off What We Do; the case studies off Work.
+- Tiles show a live/looping preview of their page. Labels in Newsreader (tile titles) and Geist Mono (indexes).
+- Hover a tile: the route from the current page to that tile lights in `--rim`; the tile's preview plays.
+- Click: the camera glides along the route; the target tile opens to full screen (§3).
+- Close/Escape: the current tile opens back.
+- Mobile: the map becomes a vertical route list of tiles; tap opens with the same rectangle motion.
 
 ---
 
 ## 5. Never
-
-Generic AI-agency look · neural-network dots · floating cubes · random glassmorphism · fake dashboards · decorative phones/laptops · cybersecurity visual language · stock photography walls · grids of boring cards · PowerPoint transitions · WebGL for its own sake · invented clients, metrics, testimonials, awards.
+Generic AI-agency look · fog/glow/haze backgrounds · purple-blue gradient blobs · neural dots · floating cubes · random glassmorphism · fake dashboards · decorative devices · cybersecurity language · neon · stock-photo walls · card grids · PowerPoint transitions · WebGL for its own sake · invented clients, metrics, testimonials, awards · copying Metalab's or Lusion's shapes, colours or wording.

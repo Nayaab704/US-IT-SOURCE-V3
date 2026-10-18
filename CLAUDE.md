@@ -19,6 +19,7 @@ US IT Source is a technology consulting and engineering company. It learns how a
   - use PowerShell syntax for env vars (`$env:NAME = "value"`), paths with `\` where it matters, `Remove-Item` instead of `rm -rf`.
 - Never rely on bash-only scripts in `package.json`. npm scripts must work on Windows (use cross-platform tools if needed).
 - Line endings: keep the repo consistent (add a `.gitattributes` with `* text=auto eol=lf` in Phase 0).
+- **Commits:** always write the message to a file and use `git commit -F <file>` (PowerShell 5.1 breaks quotes in `-m`). Delete the file afterwards.
 
 ---
 
