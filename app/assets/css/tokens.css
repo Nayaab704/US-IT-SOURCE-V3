@@ -6,6 +6,8 @@
   --night-1: #0a1222;      /* base night */
   --night-2: #18284a;      /* lit night */
   --night-light: #4a6ba3;  /* light volumes in fog (WebGL) */
+  --night-violet: #3d10e9;       /* hero atmosphere upper field (owner-tuned) */
+  --night-light-violet: #1e0edc; /* hero atmosphere key light (owner-tuned) */
   --night-text: #f2f1ec;   /* primary text on night */
   --night-muted: #8b93a3;  /* labels on night */
 

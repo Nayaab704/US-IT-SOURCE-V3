@@ -31,6 +31,8 @@ Moving between night and day *is* a transition.
 | `--night-1` | `#0A1222` | base night |
 | `--night-2` | `#18284A` | lit night |
 | `--night-light` | `#4A6BA3` | light volumes in fog (WebGL) |
+| `--night-violet` | `#3D10E9` | hero atmosphere upper field (owner-tuned, 2026-10-18) |
+| `--night-light-violet` | `#1E0EDC` | hero atmosphere key light (owner-tuned, 2026-10-18) |
 | `--night-text` | `#F2F1EC` | primary text on night |
 | `--night-muted` | `#8B93A3` | labels on night |
 | `--paper` | `#F1EEE7` | day ground |
@@ -142,4 +144,4 @@ Five cards, five materials: 01 Software & Applications (graphite) · 02 AI Model
 
 ## 5. Never
 
-Generic AI-agency look · glowing blue/purple blobs · neural-network dots · floating cubes · random glassmorphism · fake dashboards · decorative phones/laptops · cybersecurity visual language · everything-dark-neon · stock photography walls · grids of boring cards · PowerPoint transitions · WebGL for its own sake · invented clients, metrics, testimonials, awards.
+Generic AI-agency look · neural-network dots · floating cubes · random glassmorphism · fake dashboards · decorative phones/laptops · cybersecurity visual language · stock photography walls · grids of boring cards · PowerPoint transitions · WebGL for its own sake · invented clients, metrics, testimonials, awards.

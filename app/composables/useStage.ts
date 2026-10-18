@@ -38,6 +38,11 @@ export interface RegisterOptions {
   warmup?: number
   /** Draw order when several scenes are active; lower draws first. */
   order?: number
+  /**
+   * ScrollTrigger start/end for scrollProgress. Default measures the whole crossing
+   * ('top bottom' → 'bottom top'); a pinned scene usually wants 'top top' → 'bottom bottom'.
+   */
+  progress?: { start: string; end: string }
 }
 
 /** Tweakable stage-wide parameters (wired to Tweakpane in dev). */
@@ -225,7 +230,11 @@ export function registerScene(scene: StageScene, section: HTMLElement, options: 
     onToggle: (self) => setEntryActive(e, self.isActive),
   })
   // Separate trigger so scrollProgress is measured over the visible crossing, not the warm-up range.
-  e.progress = ScrollTrigger.create({ trigger: section, start: 'top bottom', end: 'bottom top' })
+  e.progress = ScrollTrigger.create({
+    trigger: section,
+    start: options.progress?.start ?? 'top bottom',
+    end: options.progress?.end ?? 'bottom top',
+  })
   e.triggers = [activation, e.progress]
 
   entries.set(scene.id, e)
@@ -284,7 +293,7 @@ export function attachRenderer(r: WebGLRenderer) {
       stageFolder.addBinding(pointerParams, 'lerp', { label: 'pointer lerp', min: 0.01, max: 1, step: 0.01 })
       stageFolder.addBinding(pointerParams, 'velocitySmoothing', { label: 'pointer vel', min: 0.01, max: 1, step: 0.01 })
     })
-    window.__stage = { info: getStageInfo }
+    window.__stage = { info: getStageInfo, bench }
   }
 
   teardownListeners = () => {
@@ -345,10 +354,37 @@ export function getStageInfo(): StageInfo {
   }
 }
 
+/**
+ * Dev only: GPU cost of one frame of the active scenes, in ms (average over `frames`).
+ * A 1-pixel readPixels after each frame forces the GPU to finish, so this measures real
+ * GPU time rather than how fast commands can be queued. Independent of vsync.
+ */
+function bench(frames = 120): number {
+  const r = renderer
+  if (!r || drawList.length === 0) return -1
+  const gl = r.getContext()
+  const px = new Uint8Array(4)
+  const pointer = usePointer()
+  const run = (n: number) => {
+    for (let i = 0; i < n; i++) {
+      r.clear()
+      for (const e of drawList) {
+        e.scene.update(i / 60, 1 / 60, e.progress.progress, pointer)
+        e.scene.render(r)
+      }
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
+    }
+  }
+  run(10) // warm-up: shader compilation, render-target allocation
+  const t0 = performance.now()
+  run(frames)
+  return (performance.now() - t0) / frames
+}
+
 declare global {
   interface Window {
     /** Dev only: lets tests and the console inspect the stage. */
-    __stage?: { info: () => StageInfo }
+    __stage?: { info: () => StageInfo; bench: (frames?: number) => number }
   }
 }
 
