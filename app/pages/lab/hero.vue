@@ -123,7 +123,7 @@ useStageScene(
   <UiSiteNav />
   <main>
     <div ref="wrap">
-      <section id="hero" ref="hero" class="hero" data-scene data-theme="night">
+      <section id="hero" ref="hero" class="hero" data-scene data-world="night">
         <!-- The logotype is rendered in WebGL; this is its readable copy. -->
         <span class="visually-hidden">US IT Source</span>
 
@@ -145,7 +145,7 @@ useStageScene(
       </section>
     </div>
 
-    <section class="after" data-scene data-theme="night">
+    <section class="after" data-scene data-world="night">
       <p class="cue">Lab — exit through the O is a later phase</p>
       <NuxtLink to="/lab" class="cue back">← /lab</NuxtLink>
     </section>

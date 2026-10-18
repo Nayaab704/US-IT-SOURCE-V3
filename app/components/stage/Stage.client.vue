@@ -45,7 +45,7 @@ onMounted(async () => {
       hud.value =
         `${info.running ? `${fps} fps` : 'paused'} · ${info.calls} calls · ${info.triangles} tris\n` +
         `scenes ${info.active}/${info.registered} · geo ${info.geometries} · tex ${info.textures} · prog ${info.programs}\n` +
-        `dpr ${info.dpr} · renderers ${info.rendererCreations}`
+        `dpr ${info.dpr} · renderers ${info.rendererCreations} · world ${info.world.toFixed(2)}`
     }, 500)
   }
 })

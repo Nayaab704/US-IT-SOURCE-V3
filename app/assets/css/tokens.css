@@ -17,6 +17,11 @@
   --ink: #16181d;          /* text on day */
   --ink-muted: #6b655b;    /* labels on day */
 
+  /* ── World-following ink (useWorld.ts writes --world: 0 = night, 1 = day) ── */
+  --world: 0;
+  --world-ink: color-mix(in oklab, var(--night-text), var(--ink) calc(var(--world) * 100%));
+  --world-muted: color-mix(in oklab, var(--night-muted), var(--ink-muted) calc(var(--world) * 100%));
+
   /* The hand-drawn line ONLY. Never a general accent. */
   --signal: #d9481f;
 

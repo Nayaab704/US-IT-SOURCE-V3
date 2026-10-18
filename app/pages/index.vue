@@ -20,6 +20,9 @@ const scenes: Scene[] = [
   { id: 'people', index: '07', label: 'People', theme: 'day' },
   { id: 'contact', index: '08', label: 'Conversation', theme: 'night' },
 ]
+
+// The nav's ink follows the night/day rhythm of these sections.
+useWorldSections()
 </script>
 
 <template>
@@ -31,7 +34,7 @@ const scenes: Scene[] = [
       :key="scene.id"
       class="scene"
       data-scene
-      :data-theme="scene.theme"
+      :data-world="scene.theme"
     >
       <p class="scene-index">{{ scene.index }} — {{ scene.label }}</p>
     </section>
@@ -44,12 +47,12 @@ const scenes: Scene[] = [
   padding: 120px var(--gutter) var(--gutter);
 }
 
-.scene[data-theme='night'] {
+.scene[data-world='night'] {
   background: var(--night-1);
   color: var(--night-muted);
 }
 
-.scene[data-theme='day'] {
+.scene[data-world='day'] {
   background: var(--paper);
   color: var(--ink-muted);
 }

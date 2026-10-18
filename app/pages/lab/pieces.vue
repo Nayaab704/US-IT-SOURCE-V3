@@ -21,12 +21,12 @@ useStageScene(
 <template>
   <UiSiteNav />
   <main>
-    <section id="hero" ref="hero" class="hero" data-scene data-theme="night">
+    <section id="hero" ref="hero" class="hero" data-scene data-world="night">
       <!-- Floating only (assembly lives on /lab/hero). Copy: ART_DIRECTION 1A. -->
       <p class="intro">Custom software, AI and computer vision — built for one business at a time.</p>
       <p class="cue">Scroll to assemble</p>
     </section>
-    <section class="after" data-scene data-theme="night">
+    <section class="after" data-scene data-world="night">
       <p class="cue">Lab — scroll assembly is not built yet</p>
       <NuxtLink to="/lab" class="cue back">← /lab</NuxtLink>
     </section>

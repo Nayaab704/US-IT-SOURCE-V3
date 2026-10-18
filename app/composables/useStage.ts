@@ -3,6 +3,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type { WebGLRenderer } from 'three'
 import type { FolderApi, Pane } from 'tweakpane'
 import { pointerParams, resetPointerVelocity, tickPointer, usePointer, type PointerState } from '~/composables/usePointer'
+import { getWorld, type World } from '~/composables/useWorld'
 
 /* ─────────────────────────── Public types ─────────────────────────── */
 
@@ -29,6 +30,8 @@ export interface StageScene {
   render(renderer: WebGLRenderer): void
   resize(width: number, height: number): void
   setActive(active: boolean): void
+  /** Optional: how much of this scene is visible in the current world (0–1), set before update(). */
+  setWorldWeight?(weight: number): void
   /** Release every geometry, material, texture and render target the scene created. */
   dispose(): void
 }
@@ -43,6 +46,8 @@ export interface RegisterOptions {
    * ('top bottom' → 'bottom top'); a pinned scene usually wants 'top top' → 'bottom bottom'.
    */
   progress?: { start: string | (() => string); end: string | (() => string) }
+  /** Which world the scene lives in. It is skipped entirely when that world is fully out of view. */
+  world?: World
 }
 
 /** Tweakable stage-wide parameters (wired to Tweakpane in dev). */
@@ -57,6 +62,7 @@ export const stageParams = {
 interface Entry {
   scene: StageScene
   order: number
+  world: World
   active: boolean
   ready: boolean
   initialising: boolean
@@ -80,8 +86,10 @@ let teardownListeners: (() => void) | null = null
 
 // A long pause (tab switch, debugger) must not teleport simulations forward.
 const MAX_DELTA = 0.1
+// Below this world weight a scene is not drawn at all.
+const WORLD_EPSILON = 0.002
 
-const stats = { rendererCreations: 0, frames: 0, calls: 0, triangles: 0 }
+const stats = { rendererCreations: 0, frames: 0, calls: 0, triangles: 0, world: 0 }
 
 /* ─────────────────────────── Loop ─────────────────────────── */
 
@@ -115,7 +123,13 @@ const frame: gsap.TickerCallback = (time, deltaMs) => {
   r.toneMappingExposure = stageParams.exposure
   r.info.reset()
   r.clear()
+  const world = getWorld()
+  stats.world = world
   for (const e of drawList) {
+    // Night scenes fade out as the world turns to day and vice versa; invisible scenes cost nothing.
+    const weight = e.world === 'day' ? world : 1 - world
+    if (weight < WORLD_EPSILON) continue
+    e.scene.setWorldWeight?.(weight)
     e.scene.update(time, delta, e.progress.progress, pointer)
     e.scene.render(r)
   }
@@ -215,6 +229,7 @@ export function registerScene(scene: StageScene, section: HTMLElement, options: 
   const e = {
     scene,
     order: options.order ?? 0,
+    world: options.world ?? 'night',
     active: false,
     ready: false,
     initialising: false,
@@ -336,6 +351,8 @@ export interface StageInfo {
   textures: number
   programs: number
   dpr: number
+  /** 0 = night, 1 = day. */
+  world: number
 }
 
 export function getStageInfo(): StageInfo {
@@ -351,6 +368,7 @@ export function getStageInfo(): StageInfo {
     textures: renderer?.info.memory.textures ?? 0,
     programs: renderer?.info.programs?.length ?? 0,
     dpr,
+    world: stats.world,
   }
 }
 
@@ -368,7 +386,11 @@ function bench(frames = 120): number {
   const run = (n: number) => {
     for (let i = 0; i < n; i++) {
       r.clear()
+      const world = getWorld()
       for (const e of drawList) {
+        const weight = e.world === 'day' ? world : 1 - world
+        if (weight < WORLD_EPSILON) continue
+        e.scene.setWorldWeight?.(weight)
         e.scene.update(i / 60, 1 / 60, e.progress.progress, pointer)
         e.scene.render(r)
       }

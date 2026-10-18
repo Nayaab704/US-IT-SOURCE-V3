@@ -1,39 +1,6 @@
-<script setup lang="ts">
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-type Theme = 'night' | 'day'
-
-const nav = ref<HTMLElement | null>(null)
-const theme = ref<Theme>('night')
-
-let ctx: gsap.Context | undefined
-
-onMounted(() => {
-  ctx = gsap.context(() => {
-    // The nav takes the theme of whichever scene sits under its vertical centre.
-    const probe = () => {
-      const el = nav.value
-      return el ? el.offsetTop + el.offsetHeight / 2 : 0
-    }
-    document.querySelectorAll<HTMLElement>('[data-scene]').forEach((scene) => {
-      ScrollTrigger.create({
-        trigger: scene,
-        start: () => `top ${probe()}px`,
-        end: () => `bottom ${probe()}px`,
-        onToggle: (self) => {
-          if (self.isActive) theme.value = (scene.dataset.theme as Theme) ?? 'night'
-        },
-      })
-    })
-  })
-})
-
-onBeforeUnmount(() => ctx?.revert())
-</script>
-
 <template>
-  <header ref="nav" class="site-nav" :data-theme="theme">
+  <!-- Ink follows the stage world (useWorld → --world), so it crossfades with the atmosphere. -->
+  <header class="site-nav">
     <!-- PLACEHOLDER wordmark — replace with the logotype once designed (ART_DIRECTION §4, 1B [TBD]) -->
     <a href="#hero" class="wordmark">US IT SOURCE</a>
 
@@ -49,8 +16,6 @@ onBeforeUnmount(() => ctx?.revert())
 
 <style scoped>
 .site-nav {
-  --nav-ink: var(--night-text);
-
   position: fixed;
   inset: 0 0 auto;
   z-index: 100;
@@ -58,12 +23,7 @@ onBeforeUnmount(() => ctx?.revert())
   align-items: center;
   justify-content: space-between;
   padding: 24px var(--gutter);
-  color: var(--nav-ink);
-  transition: color 0.4s var(--ease-out);
-}
-
-.site-nav[data-theme='day'] {
-  --nav-ink: var(--ink);
+  color: var(--world-ink);
 }
 
 .wordmark {
