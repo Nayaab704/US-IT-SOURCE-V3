@@ -40,7 +40,8 @@ export default defineNuxtConfig({
       { name: 'Geist', provider: 'google', weights: [300, 400, 500, 600] },
       { name: 'Geist Mono', provider: 'google', weights: [400, 500] },
       // v2 display serif (ART_DIRECTION v2 §2): headlines, statements, project titles.
-      { name: 'Newsreader', provider: 'google', weights: [300], styles: ['normal', 'italic'] },
+      // Preloaded: the opening's first (server-rendered) frame is set in it.
+      { name: 'Newsreader', provider: 'google', weights: [300], styles: ['normal', 'italic'], preload: true },
     ],
   },
 

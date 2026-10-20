@@ -124,6 +124,8 @@ let latest: gsap.core.Tween | null = null
 let introDone = false
 let growing = false
 let finished = false
+/** The safety cap passed: play on without waiting for the hero. */
+let forcedLate = false
 let variant: 'first' | 'repeat' | 'static' = 'first'
 const world = { inflate: 0, dolly: 0.85 }
 const fontsReady = ref(false)
@@ -176,11 +178,17 @@ function startGrow() {
   })
 }
 function maybeGrow() {
-  if (introDone && props.ready && fontsReady.value) startGrow()
+  if (introDone && (props.ready || forcedLate) && fontsReady.value) startGrow()
+}
+/** The bar and the card only come once the hero is drawn (the words keep drifting until then), so the
+ *  window never opens onto an empty card. */
+function maybeStartIntro() {
+  if (!intro || finished || !intro.paused()) return
+  if ((props.ready || forcedLate) && fontsReady.value) intro.play()
 }
 
 function buildFirst() {
-  intro = gsap.timeline({ onUpdate: drawWindow, onComplete: () => ((introDone = true), maybeGrow()) })
+  intro = gsap.timeline({ paused: true, onUpdate: drawWindow, onComplete: () => ((introDone = true), maybeGrow()) })
   // The words are already on screen (server-rendered first frame): no fade-in from nothing.
   gsap.set(itemEls.value, { autoAlpha: 1 })
   // Bar: 42 px × 62 % enters from the left edge and slides to the centre…
@@ -193,7 +201,7 @@ function buildFirst() {
 
 function buildRepeat() {
   // No words: the bar appears at the centre and opens straight away (1.1 s in all).
-  intro = gsap.timeline({ onUpdate: drawWindow, onComplete: () => ((introDone = true), maybeGrow()) })
+  intro = gsap.timeline({ paused: true, onUpdate: drawWindow, onComplete: () => ((introDone = true), maybeGrow()) })
   intro.set(win, { cx: 0.5, cxPx: 0, w: 0, wPx: 42, h: 0, r: 0 }, 0)
   intro.to(win, { h: 0.62, duration: 0.15, ease: 'power3.out' }, 0)
   intro.to(win, { w: isMobile.value ? 0.56 : 0.22, wPx: 0, r: 6, duration: 0.23, ease: 'power3.inOut' }, 0.15)
@@ -243,15 +251,21 @@ function start() {
     else if (variant === 'repeat') buildRepeat()
     else buildStatic()
     // Never hold longer than this, assets or not.
-    if (variant !== 'static') latest = gsap.delayedCall(LATEST_GROW, () => ((introDone = true), startGrow()))
+    if (variant !== 'static')
+      latest = gsap.delayedCall(LATEST_GROW, () => {
+        forcedLate = true
+        if (intro?.paused()) intro.play()
+        else maybeGrow()
+      })
   }, layer.value ?? undefined)
+  maybeStartIntro()
 }
 
 watch(
   () => props.ready,
-  () => maybeGrow(),
+  () => (maybeStartIntro(), maybeGrow()),
 )
-watch(fontsReady, () => maybeGrow())
+watch(fontsReady, () => (maybeStartIntro(), maybeGrow()))
 // The clock label's width can change on the minute: re-measure for wrapping.
 watch(timeText, () => nextTick(() => drift.forEach((d, k) => (d.width = itemEls.value[k]?.offsetWidth ?? d.width))))
 

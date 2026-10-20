@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { menuTarget, type MenuKey } from '~/composables/useMenu'
 
 /**
  * Homepage (ART_DIRECTION §4). In order: opening → hero (ribbon) → rectangle rule into paper → the
@@ -47,13 +48,21 @@ const { goTo } = useMenu()
 onMounted(() => {
   const to = route.query.to
   if (typeof to === 'string' && ['projects', 'services', 'contact'].includes(to)) {
-    void document.fonts?.ready.then(() =>
-      setTimeout(() => {
-        ScrollTrigger.refresh()
-        goTo(to as 'projects' | 'services' | 'contact', true)
+    // The target depends on every pin above it: wait until it stops moving (all sections built and
+    // refreshed), then jump; give up after ~5 s.
+    const key = to as MenuKey
+    let last = -1
+    let tries = 0
+    const poll = setInterval(() => {
+      const y = menuTarget(key)
+      tries++
+      if ((y !== null && Math.abs(y - last) < 1 && tries > 2) || tries > 20) {
+        clearInterval(poll)
+        goTo(key, true)
         window.history.replaceState(window.history.state, '', '/')
-      }, 250),
-    )
+      }
+      last = y ?? -1
+    }, 250)
   }
   void document.fonts?.ready.then(refresh)
   if (document.readyState === 'complete') refresh()

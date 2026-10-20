@@ -183,7 +183,7 @@ onBeforeUnmount(() => {
             v-for="(l, i) in MENU_LINKS"
             :key="l.key"
             :ref="i === 0 ? (el) => (firstLink = el as HTMLElement) : undefined"
-            :href="l.key === 'home' ? '#top' : `#${l.key}`"
+            :href="l.key === 'home' ? '/' : `/?to=${l.key}`"
             class="mn-link mn-rise"
             @mouseenter="still = l.key"
             @mouseleave="still = null"

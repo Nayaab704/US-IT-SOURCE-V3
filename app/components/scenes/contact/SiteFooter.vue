@@ -6,9 +6,10 @@ const { scrollTo } = useLenis()
 const { goTo } = useMenu()
 const route = useRoute()
 const links: { label: string; to: string; key: MenuKey }[] = [
-  { label: 'Work', to: '#projects', key: 'projects' },
-  { label: 'Services', to: '#services', key: 'services' },
-  { label: 'Contact', to: '#contact', key: 'contact' },
+  // Real URLs (not #anchors: the smooth-scroll plugin would jump to the section's raw top, mid-transition).
+  { label: 'Work', to: '/?to=projects', key: 'projects' },
+  { label: 'Services', to: '/?to=services', key: 'services' },
+  { label: 'Contact', to: '/?to=contact', key: 'contact' },
 ]
 /** In-page links land where each section is settled (see useMenu), smoothly. */
 function go(e: MouseEvent, key: MenuKey) {
@@ -31,7 +32,7 @@ function go(e: MouseEvent, key: MenuKey) {
       <!-- Location: added once supplied (docs/PLACEHOLDERS.md). -->
       <a href="#" aria-label="US IT Source on LinkedIn (link to be added)">LinkedIn</a>
       <span>© 2026 US IT Source</span>
-      <a href="#top" class="ft-top" @click.prevent="scrollTo(0, { duration: 1.6 })">Back to top ↑</a>
+      <a href="/" class="ft-top" @click.prevent="scrollTo(0, { duration: 1.6 })">Back to top ↑</a>
     </div>
   </footer>
 </template>
