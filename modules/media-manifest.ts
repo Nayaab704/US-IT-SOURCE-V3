@@ -1,10 +1,11 @@
-import { existsSync, readdirSync, statSync, watch } from 'node:fs'
+import { closeSync, existsSync, openSync, readSync, readdirSync, statSync, watch } from 'node:fs'
 import { join } from 'node:path'
 import { addTemplate, defineNuxtModule, updateTemplates } from 'nuxt/kit'
 
 /**
  * Owner media, auto-detected from `public/media/` and exposed as `#build/media-manifest.mjs`:
- * - projects/<slug>/NN.(png|jpg|jpeg|webp|avif) (NN-mobile.… forces the phone frame) → screens
+ * - projects/<slug>/NN.(png|jpg|jpeg|webp|avif) (NN-mobile.… forces the phone frame) → screens, with their
+ *   pixel sizes in `sizes` (so pages reserve the space before the image arrives)
  * - services/<slug>/bg.(avif|webp|jpg) → chapter background (best format first, all listed);
  *   bg-1600.(avif|webp|jpg) → optional smaller variants (srcset)
  * - services/<slug>/loop.(mp4|webm) + seq-NN.(jpg|webp) → video / photo sequence
@@ -14,6 +15,7 @@ import { addTemplate, defineNuxtModule, updateTemplates } from 'nuxt/kit'
  */
 export interface MediaManifest {
   projects: Record<string, string[]>
+  sizes: Record<string, [number, number]>
   services: Record<string, { bg: string[]; bgSmall: string[]; loop: string[]; seq: string[] }>
   team: string[]
   contact: { images: string[]; videos: { sources: string[]; poster: string | null }[] }
@@ -23,14 +25,53 @@ const SCREEN = /^\d{2}(-mobile)?\.(png|jpe?g|webp|avif)$/i
 const BG_ORDER = ['avif', 'webp', 'jpg', 'jpeg']
 const FILENAME = 'media-manifest.mjs'
 
+/** Pixel size from the file header (PNG, JPEG, WebP); null for anything else or a damaged file. */
+function imageSize(file: string): [number, number] | null {
+  const bytes = new Uint8Array(64 * 1024)
+  const fd = openSync(file, 'r')
+  const n = readSync(fd, bytes, 0, bytes.length, 0)
+  closeSync(fd)
+  const v = new DataView(bytes.buffer, 0, n)
+  const ascii = (at: number, len: number) => String.fromCharCode(...bytes.subarray(at, at + len))
+  const u24le = (at: number) => v.getUint16(at, true) | (v.getUint8(at + 2) << 16)
+  try {
+    if (v.getUint32(0) === 0x89504e47) return [v.getUint32(16), v.getUint32(20)]
+    if (ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') {
+      const kind = ascii(12, 4)
+      if (kind === 'VP8X') return [1 + u24le(24), 1 + u24le(27)]
+      if (kind === 'VP8L') {
+        const bits = v.getUint32(21, true)
+        return [1 + (bits & 0x3fff), 1 + ((bits >> 14) & 0x3fff)]
+      }
+      if (kind === 'VP8 ') return [v.getUint16(26, true) & 0x3fff, v.getUint16(28, true) & 0x3fff]
+    }
+    if (v.getUint16(0) === 0xffd8) {
+      // Walk the JPEG segments to the first start-of-frame marker.
+      let i = 2
+      while (i + 9 < n && v.getUint8(i) === 0xff) {
+        const m = v.getUint8(i + 1)
+        if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return [v.getUint16(i + 7), v.getUint16(i + 5)]
+        i += 2 + v.getUint16(i + 2)
+      }
+    }
+  } catch {
+    // Truncated header: no size, the page just doesn't reserve the space.
+  }
+  return null
+}
+
 const dirs = (d: string) => (existsSync(d) ? readdirSync(d).filter((x) => statSync(join(d, x)).isDirectory()) : [])
 const files = (d: string) => (existsSync(d) ? readdirSync(d).filter((x) => !statSync(join(d, x)).isDirectory()).sort() : [])
 
 function scan(root: string): MediaManifest {
-  const out: MediaManifest = { projects: {}, services: {}, team: [], contact: { images: [], videos: [] } }
+  const out: MediaManifest = { projects: {}, sizes: {}, services: {}, team: [], contact: { images: [], videos: [] } }
   for (const slug of dirs(join(root, 'projects'))) {
     const list = files(join(root, 'projects', slug)).filter((f) => SCREEN.test(f))
     if (list.length) out.projects[slug] = list.map((f) => `/media/projects/${slug}/${f}`)
+    for (const f of list) {
+      const size = imageSize(join(root, 'projects', slug, f))
+      if (size) out.sizes[`/media/projects/${slug}/${f}`] = size
+    }
   }
   for (const slug of dirs(join(root, 'services'))) {
     const all = files(join(root, 'services', slug))
@@ -78,6 +119,7 @@ export default defineNuxtModule({
           "declare module '#build/media-manifest.mjs' {",
           '  const media: {',
           '    projects: Record<string, string[]>',
+          '    sizes: Record<string, [number, number]>',
           '    services: Record<string, { bg: string[]; bgSmall: string[]; loop: string[]; seq: string[] }>',
           '    team: string[]',
           '    contact: { images: string[]; videos: { sources: string[]; poster: string | null }[] }',

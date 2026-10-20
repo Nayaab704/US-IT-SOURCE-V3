@@ -15,6 +15,9 @@ export interface ProjectScreen {
   mobile: boolean
   /** Screen-reader / placeholder label. */
   label: string
+  /** Pixel width / height read from the file at build time (lets pages reserve the space). */
+  width?: number
+  height?: number
 }
 
 export interface ProjectEntry {
@@ -66,7 +69,13 @@ const two = (n: number) => String(n).padStart(2, '0')
 function screensFor(e: ProjectEntry): ProjectScreen[] {
   const files = media.projects[e.media ?? e.slug] ?? []
   if (files.length) {
-    return files.map((src, i) => ({ src, mobile: /-mobile\.\w+$/i.test(src), label: `${e.name} screen ${two(i + 1)}` }))
+    // Labelled by the file's own number (01.png and 01-mobile.png are the desktop and phone views of screen 01).
+    return files.map((src, i) => {
+      const mobile = /-mobile\.\w+$/i.test(src)
+      const num = /\/(\d{2})(?:-mobile)?\.\w+$/.exec(src)?.[1] ?? two(i + 1)
+      const [width, height] = media.sizes[src] ?? []
+      return { src, mobile, label: `${e.name} ${mobile ? 'phone ' : ''}screen ${num}`, width, height }
+    })
   }
   // Placeholders: desktop frames with the phone frames spread among them.
   const ph = e.placeholders ?? { desktop: 4, mobile: 0 }

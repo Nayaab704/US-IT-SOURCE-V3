@@ -8,7 +8,10 @@ import type { CaseItem } from '~/data/caseStudies'
  */
 const props = defineProps<{ items: CaseItem[] }>()
 const root = ref<HTMLElement | null>(null)
-const reduced = useReducedMotion()
+const prefersReduced = useReducedMotion()
+// Applied only after mount: SSR renders the animated state, and production hydration doesn't patch class mismatches.
+const mounted = ref(false)
+const reduced = computed(() => mounted.value && prefersReduced.value)
 const active = ref(-1)
 const rows = computed(() =>
   props.items.map((it) => {
@@ -27,6 +30,7 @@ function run(on: boolean) {
   timer = setInterval(() => (active.value = (active.value + 1) % rows.value.length), 1600)
 }
 onMounted(() => {
+  mounted.value = true
   io = new IntersectionObserver(([e]) => run(!!e?.isIntersecting), { threshold: 0.4 })
   if (root.value) io.observe(root.value)
 })
@@ -68,7 +72,7 @@ onBeforeUnmount(() => {
 }
 
 .ac-from {
-  color: rgba(22, 24, 29, 0.55);
+  color: rgba(22, 24, 29, 0.66);
   transition: color 0.4s;
 }
 
@@ -92,7 +96,7 @@ onBeforeUnmount(() => {
   padding: 6px 14px;
   border: 1px solid rgba(22, 24, 29, 0.2);
   border-radius: 999px;
-  color: rgba(22, 24, 29, 0.6);
+  color: rgba(22, 24, 29, 0.66);
   font-size: 14px;
   transition:
     background 0.4s 0.45s,

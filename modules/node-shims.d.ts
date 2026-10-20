@@ -4,6 +4,9 @@ declare module 'node:fs' {
   export function existsSync(path: string): boolean
   export function readdirSync(path: string): string[]
   export function statSync(path: string): { isDirectory(): boolean }
+  export function openSync(path: string, flags: string): number
+  export function readSync(fd: number, buffer: Uint8Array, offset: number, length: number, position: number): number
+  export function closeSync(fd: number): void
   export function watch(path: string, options: { recursive?: boolean }, listener: () => void): { close(): void }
 }
 declare module 'node:path' {

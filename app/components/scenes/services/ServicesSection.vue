@@ -84,6 +84,11 @@ function render() {
   const T = P.pin.transition
   const reduced = reducedMotion.value
   const n = services.length
+  // Reduced motion: text and side visuals switch at the chapter midpoint (with a short CSS fade) instead of
+  // following the scroll, so stopping between chapters never leaves two titles half-visible on top of each other.
+  const step = (x: number) => (reduced ? (x >= 0.5 ? 1 : 0) : x)
+  // visibility transitions too: it stays visible for the whole fade-out, then hides.
+  const fade = reduced ? 'opacity 0.25s ease, visibility 0.25s' : ''
   let current = -1
   // Intro title passes behind glass as the first photo comes up.
   introTitle.value?.setExit(clamp01((t - P.pin.intro) / (T * 0.8)))
@@ -124,11 +129,12 @@ function render() {
     progress[k] = services[k]!.visual === 'cards' ? ease2(clamp01((t - s - T * 0.25) / (T * 0.8))) : clamp01((t - s - T) / (P.pin.chapter - T))
 
     // Name: rises in from below; leaves behind glass.
-    const nameIn = reduced ? wipe : ease3out(clamp01((t - s - 0.04) / (T * 0.8)))
-    const nameOut = clamp01((t - startOf(k + 1)) / (T * 0.8))
+    const nameIn = reduced ? step(wipe) : ease3out(clamp01((t - s - 0.04) / (T * 0.8)))
+    const nameOut = reduced ? step(out) : clamp01((t - startOf(k + 1)) / (T * 0.8))
     const nw = nameWraps[k]
     if (nw) {
       nw.style.visibility = nameIn > 0 && !(k < n - 1 && nameOut >= 1) ? 'visible' : 'hidden'
+      nw.style.transition = fade
       nw.style.opacity = nameIn.toFixed(3)
       nw.style.transform = reduced ? '' : `translate3d(0, ${((1 - nameIn) * 60).toFixed(1)}px, 0)`
     }
@@ -138,19 +144,23 @@ function render() {
     // Line + scope: a quick fade swap.
     const ln = lines[k]
     if (ln) {
-      const o = clamp01((t - s - 0.08) / (T * 0.5)) * (1 - clamp01((t - startOf(k + 1)) / (T * 0.4)) * (k < n - 1 ? 1 : 0))
+      const o = reduced
+        ? step(wipe) * (1 - step(out))
+        : clamp01((t - s - 0.08) / (T * 0.5)) * (1 - clamp01((t - startOf(k + 1)) / (T * 0.4)) * (k < n - 1 ? 1 : 0))
       ln.style.opacity = o.toFixed(3)
       ln.style.visibility = o > 0.001 ? 'visible' : 'hidden'
+      ln.style.transition = fade
     }
 
     // Side visual: old slides up and fades; new rises in ~120 ms (≈ 0.025 vh) later.
     const vis = visuals[k]
     if (vis) {
-      const vin = reduced ? wipe : ease3out(clamp01((t - s - 0.06 - 0.025) / (T * 0.8)))
-      const vout = k < n - 1 ? (reduced ? out : ease2(clamp01((t - startOf(k + 1)) / (T * 0.7)))) : 0
+      const vin = reduced ? step(wipe) : ease3out(clamp01((t - s - 0.06 - 0.025) / (T * 0.8)))
+      const vout = k < n - 1 ? (reduced ? step(out) : ease2(clamp01((t - startOf(k + 1)) / (T * 0.7)))) : 0
       const o = vin * (1 - vout)
       vis.style.opacity = o.toFixed(3)
       vis.style.visibility = o > 0.001 ? 'visible' : 'hidden'
+      vis.style.transition = fade
       vis.style.transform = reduced ? '' : `translate3d(0, ${((1 - vin) * 50 - vout * 70).toFixed(1)}px, 0)`
     }
   }

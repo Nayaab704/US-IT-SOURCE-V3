@@ -10,12 +10,16 @@ import type { CaseItem } from '~/data/caseStudies'
 const props = defineProps<{ items: CaseItem[] }>()
 const root = ref<HTMLElement | null>(null)
 const progress = ref(0)
-const reduced = useReducedMotion()
+const prefersReduced = useReducedMotion()
+// Applied only after mount: SSR renders the undrawn state, and production hydration doesn't patch class/style mismatches.
+const mounted = ref(false)
+const reduced = computed(() => mounted.value && prefersReduced.value)
 let st: ScrollTrigger | null = null
 
 const shown = (i: number) => reduced.value || progress.value >= i / Math.max(1, props.items.length - 1) - 0.02
 
 onMounted(() => {
+  mounted.value = true
   st = ScrollTrigger.create({
     trigger: root.value,
     start: 'top 78%',
@@ -115,10 +119,18 @@ onBeforeUnmount(() => st?.kill())
   color: rgba(22, 24, 29, 0.72);
 }
 
+/* Not yet reached: dimmed but still readable — the name stays ≥ 3:1 (large text), the sentence ≥ 4.5:1. */
 .lc-name,
 .lc-text {
-  opacity: 0.25;
   transition: opacity 0.5s;
+}
+
+.lc-name {
+  opacity: 0.5;
+}
+
+.lc-text {
+  opacity: 0.86;
 }
 
 .lc-stage.on .lc-name,

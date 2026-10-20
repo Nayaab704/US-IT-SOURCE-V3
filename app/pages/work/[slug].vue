@@ -63,7 +63,7 @@ function toContact() {
         <li v-for="c in project.chips" :key="c">{{ c }}</li>
       </ul>
       <figure v-if="heroShot" class="cs-shot">
-        <img :src="heroShot.src!" :alt="`${project.name} — ${heroShot.label}`" decoding="async" />
+        <img :src="heroShot.src!" :alt="heroShot.label" :width="heroShot.width" :height="heroShot.height" decoding="async" fetchpriority="high" />
       </figure>
     </header>
 
@@ -136,7 +136,7 @@ function toContact() {
           :aria-label="`Open ${s.label}`"
           @click="openShot(i, $event)"
         >
-          <img :src="s.src!" alt="" loading="lazy" decoding="async" />
+          <img :src="s.src!" alt="" :width="s.width" :height="s.height" loading="lazy" decoding="async" />
         </button>
       </div>
     </section>
@@ -173,7 +173,7 @@ function toContact() {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(22, 24, 29, 0.6);
+  color: rgba(22, 24, 29, 0.66);
 }
 
 .cs-title {
@@ -281,7 +281,7 @@ function toContact() {
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(22, 24, 29, 0.5);
+  color: rgba(22, 24, 29, 0.66);
 }
 
 /* What we built: an editorial two-column list, not cards. */
