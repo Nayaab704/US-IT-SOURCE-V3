@@ -46,13 +46,13 @@ Screens are **auto-detected**: drop `01.png`, `02.png` … (or `.jpg` / `.webp` 
 
 | ✓ | Slot | Expected file / value | Where it appears | Size / format | State | Search terms |
 |---|---|---|---|---|---|---|
-| [ ] | Garage Automation — screens | `public/media/projects/garage-automation/01.png`, `02.png` … | `ProjectsSection` stream + lightbox, `/` and `/lab/projects` | desktop 2880×1800 (16:10) PNG → WebP ≤ 400 KB; phone 1170×2532 PNG → WebP ≤ 300 KB; redacted / demo data | label (8 neutral frames: "[Garage Automation screen 01]" …) | — (real screens only, never stock or mock UI) |
-| [ ] | Nester — screens | `public/media/projects/nester/01.png` … | same | same | label (5 neutral frames) | — |
+| [x] | Garage Automation — screens | `public/media/projects/garage-automation/01.webp`, `02.webp`, `03.webp` + `01-mobile.png`, `02-mobile.png` | stream, lightbox, case page | desktop WebP ≤ 400 KB, phone PNG/WebP | **yours** (desktop re-encoded to WebP). Check: screen 02 shows a user's name ("Hello, Raafay") and the client name — keep only if the client agrees | — |
+| [ ] | Nester — screens | `public/media/projects/nester/01.png`, `02.png` | same | 2880×1800 | **yours, but small** (590 px / 1007 px wide — look soft on large screens; supply full-size captures) | — |
 | [ ] | Garage Automation — description | "A custom operations platform for an automotive business — intake, work orders, parts, vendors, purchase orders and labor in one place." | `app/data/projects.ts` | — | owner text, **editable** | — |
 | [ ] | Garage Automation — chips | Vehicle intake · Work orders · Parts & vendors · Purchase orders · Labor | `app/data/projects.ts` | — | owner text, **editable** | — |
 | [ ] | Nester — description | "Material nesting software that lays out parts on sheets to cut faster and waste less." | `app/data/projects.ts` | — | owner text, **editable** | — |
 | [ ] | Nester — chips | Nesting · Sheet layouts · Cut planning | `app/data/projects.ts` | — | owner text, **editable** | — |
-| [ ] | Case-study links | `caseStudy: '#'` per project | "View case study →" | — | label (`#`) | — |
+| [x] | Case-study links | `href: /work/<slug>` per project | "View case study →" (rectangle transition) | — | **done** — pages at `/work/garage-automation`, `/work/nester` | — |
 | [ ] | Garage Automation — environment photo | `public/media/projects/garage-automation/environment.jpg` | not used by F1 (kept for case studies) | 2560×1440 JPEG ≤ 450 KB | stock (temporary, environment only) | "auto repair garage lift" |
 | [ ] | Nester — environment photo | `public/media/projects/nester/environment.jpg` | not used by F1 (kept for case studies) | same | stock (temporary, environment only) | "laser cutter sheet metal" |
 | [ ] | Project Assembly Track | new entry + `public/media/projects/assembly-track/` | Projects tabs (when added) | as above | not included yet | — |
