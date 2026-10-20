@@ -145,8 +145,15 @@ function onResize() {
 function onFocus(e: FocusEvent, key: MenuKey) {
   if ((e.target as HTMLElement).matches(':focus-visible')) still.value = key
 }
+const route = useRoute()
 function pick(key: MenuKey, e: Event) {
   e.preventDefault()
+  if (route.path !== '/') {
+    // Another page (a case study): go home, straight to that section (no opening).
+    open.value = false
+    void navigateTo(key === 'home' ? '/' : `/?to=${key}`)
+    return
+  }
   closeMenu(key)
 }
 

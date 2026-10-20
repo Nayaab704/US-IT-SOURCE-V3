@@ -197,6 +197,13 @@ function onTabKey(e: KeyboardEvent, i: number) {
   tabEls.value[to]?.focus()
 }
 
+// "View case study →": the rectangle grows from the screens into the case-study page.
+const { go } = useRectTransition()
+const streamBox = ref<HTMLElement | null>(null)
+function openCase(e: MouseEvent) {
+  go(textProject.value.href, streamBox.value ?? (e.currentTarget as HTMLElement))
+}
+
 function openLightbox(screens: ProjectScreen[], index: number, from: HTMLElement) {
   lightbox.value?.open(screens, index, from)
 }
@@ -276,15 +283,15 @@ onBeforeUnmount(() => {
           <div :ref="setReveal(1)" class="pj-panel-wrap">
             <div id="pj-panel" ref="panel" class="pj-panel" role="tabpanel" :aria-labelledby="`pj-tab-${project.slug}`">
               <h3 class="pj-name">{{ textProject.name }}</h3>
-              <p class="pj-desc">{{ textProject.description }}</p>
+              <p class="pj-desc">{{ textProject.oneLiner }}</p>
               <ul class="pj-chips" aria-label="Scope">
                 <li v-for="c in textProject.chips" :key="c" class="pj-chip">{{ c }}</li>
               </ul>
-              <a class="pj-link" :href="textProject.caseStudy">View case study <span aria-hidden="true">→</span></a>
+              <a class="pj-link" :href="textProject.href" @click.prevent="openCase($event)">View case study <span aria-hidden="true">→</span></a>
             </div>
           </div>
         </div>
-        <div :ref="setReveal(2)" class="pj-right">
+        <div :ref="(el) => { setReveal(2)(el); streamBox = el as HTMLElement | null }" class="pj-right">
           <ScenesWorkProjectStream
             :project="project"
             :mode="streamMode"

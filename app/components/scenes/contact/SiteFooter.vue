@@ -4,6 +4,7 @@ import type { MenuKey } from '~/composables/useMenu'
 
 const { scrollTo } = useLenis()
 const { goTo } = useMenu()
+const route = useRoute()
 const links: { label: string; to: string; key: MenuKey }[] = [
   { label: 'Work', to: '#projects', key: 'projects' },
   { label: 'Services', to: '#services', key: 'services' },
@@ -12,7 +13,9 @@ const links: { label: string; to: string; key: MenuKey }[] = [
 /** In-page links land where each section is settled (see useMenu), smoothly. */
 function go(e: MouseEvent, key: MenuKey) {
   e.preventDefault()
-  goTo(key)
+  // On a case-study page: back home, straight to that section.
+  if (route.path !== '/') void navigateTo(`/?to=${key}`)
+  else goTo(key)
 }
 </script>
 

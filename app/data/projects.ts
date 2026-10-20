@@ -1,10 +1,12 @@
 import media from '#build/media-manifest.mjs'
 
 /**
- * The projects shown in "View our projects" (F1). Add a project = add one entry here + a folder
- * `public/media/projects/<slug>/` with screenshots named 01.png, 02.png … (02-mobile.png forces the
- * phone frame; otherwise portrait images get it automatically). Copy is owner-supplied and editable
- * (docs/PLACEHOLDERS.md).
+ * The projects: one entry per project drives its tab in "View our projects" AND its case-study page
+ * (/work/<slug>). To add a project (full guide: docs/ADDING_A_PROJECT.md):
+ *   1. screenshots in public/media/projects/<slug>/ — 01.png, 02.png … (NN-mobile.png = phone frame;
+ *      portrait images get it automatically),
+ *   2. its page text in docs/case-studies/<slug>.md,
+ *   3. one entry below.
  */
 export interface ProjectScreen {
   /** Image URL, or null for a neutral labelled placeholder frame. */
@@ -15,49 +17,61 @@ export interface ProjectScreen {
   label: string
 }
 
-export interface Project {
+export interface ProjectEntry {
+  /** URL name: /work/<slug>. */
   slug: string
   name: string
-  description: string
+  /** Client name (shown on the case-study page; leave '' if it should not be named). */
+  client: string
+  /** One sentence for the projects section. */
+  oneLiner: string
+  /** Scope chips. */
   chips: string[]
+  /** Screenshots folder in public/media/projects/ (defaults to the slug). */
+  media?: string
+  /** The case-study text: a file in docs/case-studies/. */
   caseStudy: string
-  /** Neutral frames shown until real screenshots exist. */
-  placeholders: { desktop: number; mobile: number }
-  screens: ProjectScreen[]
+  /** Neutral frames shown only while the folder has no screenshots yet. */
+  placeholders?: { desktop: number; mobile: number }
 }
 
-type ProjectEntry = Omit<Project, 'screens'>
+export interface Project extends ProjectEntry {
+  /** The case-study page. */
+  href: string
+  screens: ProjectScreen[]
+}
 
 const entries: ProjectEntry[] = [
   {
     slug: 'garage-automation',
     name: 'Garage Automation',
-    description:
+    client: 'Makkah Autosales',
+    oneLiner:
       'A custom operations platform for an automotive business — intake, work orders, parts, vendors, purchase orders and labor in one place.',
     chips: ['Vehicle intake', 'Work orders', 'Parts & vendors', 'Purchase orders', 'Labor'],
-    caseStudy: '#',
-    placeholders: { desktop: 6, mobile: 2 },
+    caseStudy: 'garage-automation.md',
   },
   {
     slug: 'nester',
     name: 'Nester',
-    description: 'Material nesting software that lays out parts on sheets to cut faster and waste less.',
+    client: '',
+    oneLiner: 'Material nesting software that lays out parts on sheets to cut faster and waste less.',
     chips: ['Nesting', 'Sheet layouts', 'Cut planning'],
-    caseStudy: '#',
-    placeholders: { desktop: 5, mobile: 0 },
+    caseStudy: 'nester.md',
   },
 ]
 
 const two = (n: number) => String(n).padStart(2, '0')
 
 function screensFor(e: ProjectEntry): ProjectScreen[] {
-  const files = media.projects[e.slug] ?? []
+  const files = media.projects[e.media ?? e.slug] ?? []
   if (files.length) {
     return files.map((src, i) => ({ src, mobile: /-mobile\.\w+$/i.test(src), label: `${e.name} screen ${two(i + 1)}` }))
   }
   // Placeholders: desktop frames with the phone frames spread among them.
-  const total = e.placeholders.desktop + e.placeholders.mobile
-  const every = e.placeholders.mobile ? Math.floor(total / e.placeholders.mobile) : 0
+  const ph = e.placeholders ?? { desktop: 4, mobile: 0 }
+  const total = ph.desktop + ph.mobile
+  const every = ph.mobile ? Math.floor(total / ph.mobile) : 0
   return Array.from({ length: total }, (_, i) => ({
     src: null,
     mobile: every > 0 && i % every === every - 1,
@@ -65,7 +79,7 @@ function screensFor(e: ProjectEntry): ProjectScreen[] {
   }))
 }
 
-export const projects: Project[] = entries.map((e) => ({ ...e, screens: screensFor(e) }))
+export const projects: Project[] = entries.map((e) => ({ ...e, href: `/work/${e.slug}`, screens: screensFor(e) }))
 
 /** Look & motion of the projects section (wired to Tweakpane "projects" in dev). */
 export const projectsParams = {

@@ -41,7 +41,20 @@ const refresh = () => {
 const onImage = (e: Event) => {
   if (e.target instanceof HTMLImageElement) refresh()
 }
+// Arriving from another page with a target (/?to=contact): land on that section, then tidy the URL.
+const route = useRoute()
+const { goTo } = useMenu()
 onMounted(() => {
+  const to = route.query.to
+  if (typeof to === 'string' && ['projects', 'services', 'contact'].includes(to)) {
+    void document.fonts?.ready.then(() =>
+      setTimeout(() => {
+        ScrollTrigger.refresh()
+        goTo(to as 'projects' | 'services' | 'contact', true)
+        window.history.replaceState(window.history.state, '', '/')
+      }, 250),
+    )
+  }
   void document.fonts?.ready.then(refresh)
   if (document.readyState === 'complete') refresh()
   else window.addEventListener('load', refresh, { once: true })
