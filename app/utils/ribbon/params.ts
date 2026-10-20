@@ -71,9 +71,10 @@ export const ribbonParams = {
     ] as Twist[],
   },
   softboxes: {
-    /** Two big electric-blue panels raking from the sides. */
-    blueA: { color: '#3b5bff', intensity: 2.5, azimuth: 60, elevation: 18, angularWidth: 30, angularHeight: 26, roll: 10, softness: 0.65 } as Softbox,
-    blueB: { color: '#3b5bff', intensity: 2.5, azimuth: -120, elevation: 14, angularWidth: 30, angularHeight: 26, roll: -8, softness: 0.65 } as Softbox,
+    /** Two big panels raking from the sides: an inky violet (deep lilac on black lacquer) — the main one,
+     *  and a lighter lilac on the other side for the edge sheen. Intensities as before. */
+    blueA: { color: '#6a4cff', intensity: 2.5, azimuth: 60, elevation: 18, angularWidth: 30, angularHeight: 26, roll: 10, softness: 0.65 } as Softbox,
+    blueB: { color: '#9c86ff', intensity: 2.5, azimuth: -120, elevation: 14, angularWidth: 30, angularHeight: 26, roll: -8, softness: 0.65 } as Softbox,
     /** Long cool-white strip above: the white highlight running along the top curves. */
     strip: { color: '#dde4ff', intensity: 2.5, azimuth: 0, elevation: 78, angularWidth: 100, angularHeight: 9, roll: 0, softness: 0.7 } as Softbox,
     kicker: { color: '#f0c58c', intensity: 1.2, azimuth: 120, elevation: -6, angularWidth: 8, angularHeight: 6, roll: 0, softness: 0.6 } as Softbox,
@@ -92,7 +93,7 @@ export const ribbonParams = {
     clearcoatRoughness: 0.06,
     /** Soft latex sheen at grazing angles. */
     sheen: 0.25,
-    sheenColor: '#5b6bff',
+    sheenColor: '#5b45e0',
     sheenRoughness: 0.6,
     /** Reflection gain the sheen sees (the envIntensity gain is divided back out for it). */
     sheenGain: 3,

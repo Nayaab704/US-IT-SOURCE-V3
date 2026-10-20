@@ -10,6 +10,13 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/tokens.css', '~/assets/css/base.css'],
 
+  vite: {
+    build: {
+      // three.js is one ~550 KB chunk; it is lazy-loaded with the stage (LazyStage), not in the entry.
+      chunkSizeWarningLimit: 800,
+    },
+  },
+
   typescript: {
     strict: true,
   },
