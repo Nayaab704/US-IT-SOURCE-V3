@@ -78,7 +78,7 @@ Backgrounds are auto-detected: `public/media/services/<slug>/bg.avif|webp|jpg` (
 ## let's work together + contact (F3 — built)
 | ✓ | Slot | Expected file / value | Where it appears | Size / format | State | Search terms |
 |---|---|---|---|---|---|---|
-| [ ] | Scene rectangles (8 desktop / 5 mobile) | `public/media/contact/*.jpg|webp` (photos) + `*.webm` + `*.mp4` (1–2 loops), file-name order | `ContactSection`, `/` and `/lab/contact` | portrait 1200×1500 ≤ 250 KB; loops 720×960 ≤ 1.5 MB | 1 stock photo (Daniel Khilchenko), the rest labelled "[photo]" / "[video]" | "workbench hands", "team at work workshop" (real, warm) |
+| [x] | Scene rectangles (8 desktop / 5 mobile) | photos `public/media/contact/photo-01.webp` … `photo-06.webp` (yours, compressed) + loops `01.webm/.mp4` + `02.webm/.mp4` with `-poster.jpg` (Pexels, credited) | `ContactSection` | photos ≤ 210 KB WebP; loops 720×960, 6 s, ≤ 0.6 MB | filled — **confirm the licence / source of your six photos** (one shows a Logitech logo on the mouse) | — |
 | [ ] | People — names and roles | Mahwish Akhtar — President & CEO · Monis Aziz — COO · Lauren Peet — Sales & Business Development Leader | contact rows (`app/data/contact.ts`) | — | **names / capitalisation inferred from the emails — confirm** | — |
 | [x] | Emails | Mahwish.akhtar@usitsource.com · Monis.aziz@usitsource.com · Lauren.peet@usitsource.com | contact rows, mailto + Copy | — | owner (exact) | — |
 | [x] | Contact line | "Tell us how your business works. We'll show you what software built around it could look like." | below the headline | — | owner | — |

@@ -16,6 +16,12 @@ const props = withDefaults(defineProps<{ refreshPriority?: number }>(), { refres
 const root = ref<HTMLElement | null>(null)
 const scene = ref<HTMLElement | null>(null)
 const rectEls: HTMLElement[] = []
+// The loops play only while the section is on screen (and never with reduced motion: posters stay).
+const videos = new Set<HTMLVideoElement>()
+const setVideo = (el: unknown) => {
+  if (el instanceof HTMLVideoElement) videos.add(el)
+}
+let videoIO: IntersectionObserver | null = null
 const setRect = (i: number) => (el: unknown) => {
   if (el instanceof HTMLElement) rectEls[i] = el
 }
@@ -181,11 +187,22 @@ onMounted(() => {
   else rebuild()
   gsap.ticker.add(onTick)
   void buildPane()
+  videoIO = new IntersectionObserver(
+    ([e]) => {
+      for (const v of videos) {
+        if (e?.isIntersecting && !prefersReduced.value) void v.play().catch(() => {})
+        else v.pause()
+      }
+    },
+    { rootMargin: '200px 0px' },
+  )
+  if (root.value) videoIO.observe(root.value)
 })
 useStageScene(() => createLeavesScene({ id: 'contact-leaves', section: () => root.value }), root, { world: 'day' })
 watch([reducedMotion, isMobile], () => nextTick(rebuild))
 onBeforeUnmount(() => {
   gsap.ticker.remove(onTick)
+  videoIO?.disconnect()
   ctx?.revert()
   document.documentElement.classList.remove('stage-front', 'stage-multiply')
   paneFolder?.dispose()
@@ -208,8 +225,18 @@ onBeforeUnmount(() => {
           aria-hidden="true"
         >
           <div class="ct-media">
-            <img v-if="media[i]?.type === 'image'" :src="media[i]!.src" alt="" loading="lazy" decoding="async" />
-            <video v-else-if="media[i]?.type === 'video'" :src="media[i]!.src" muted loop playsinline autoplay preload="metadata" />
+            <img v-if="media[i]?.type === 'image'" :src="(media[i] as { src: string }).src" alt="" loading="lazy" decoding="async" />
+            <video
+              v-else-if="media[i]?.type === 'video'"
+              :ref="setVideo"
+              :poster="(media[i] as { poster: string | null }).poster ?? undefined"
+              muted
+              loop
+              playsinline
+              preload="none"
+            >
+              <source v-for="src in (media[i] as { sources: string[] }).sources" :key="src" :src="src" :type="src.endsWith('webm') ? 'video/webm' : 'video/mp4'" />
+            </video>
             <span v-else class="ct-ph">[{{ r.kind }}]</span>
           </div>
         </div>

@@ -63,12 +63,15 @@ export const rectsMobile: Rect[] = [
  * Media for each rectangle: videos go to 'video' slots first, photos to the rest (in file order);
  * whatever is left over stays a labelled placeholder.
  */
-export function mediaFor(rects: Rect[]): ({ type: 'image' | 'video'; src: string } | null)[] {
+export type RectMedia = { type: 'image'; src: string } | { type: 'video'; sources: string[]; poster: string | null }
+
+export function mediaFor(rects: Rect[]): (RectMedia | null)[] {
   const images = [...media.contact.images]
   const videos = [...media.contact.videos]
-  return rects.map((r) => {
-    if (r.kind === 'video' && videos.length) return { type: 'video', src: videos.shift()! }
-    if (r.kind === 'photo' && images.length) return { type: 'image', src: images.shift()! }
+  return rects.map((r): RectMedia | null => {
+    if (r.kind === 'video' && videos.length) return { type: 'video', ...videos.shift()! }
+    // A photo slot (or a video slot with no loop left) takes the next photo.
+    if (images.length) return { type: 'image', src: images.shift()! }
     return null
   })
 }

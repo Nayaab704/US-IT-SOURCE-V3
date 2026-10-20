@@ -9,14 +9,14 @@ import { addTemplate, defineNuxtModule, updateTemplates } from 'nuxt/kit'
  *   bg-1600.(avif|webp|jpg) → optional smaller variants (srcset)
  * - services/<slug>/loop.(mp4|webm) + seq-NN.(jpg|webp) → video / photo sequence
  * - team/*.(jpg|jpeg|webp|avif) → portraits
- * - contact/*.(jpg|jpeg|webp|avif) + *.(mp4|webm) → the contact scene's photo / video rectangles
+ * - contact/*.(jpg|jpeg|webp|avif) → photos; NN.webm + NN.mp4 + NN-poster.jpg → one video loop each
  * Regenerated in dev when a file there is added or removed (public/ is outside Nuxt's watched dirs).
  */
 export interface MediaManifest {
   projects: Record<string, string[]>
   services: Record<string, { bg: string[]; bgSmall: string[]; loop: string[]; seq: string[] }>
   team: string[]
-  contact: { images: string[]; videos: string[] }
+  contact: { images: string[]; videos: { sources: string[]; poster: string | null }[] }
 }
 
 const SCREEN = /^\d{2}(-mobile)?\.(png|jpe?g|webp|avif)$/i
@@ -50,8 +50,14 @@ function scan(root: string): MediaManifest {
     .filter((f) => /\.(jpe?g|webp|avif)$/i.test(f))
     .map((f) => `/media/team/${f}`)
   const contact = files(join(root, 'contact'))
-  out.contact.images = contact.filter((f) => /\.(jpe?g|webp|avif)$/i.test(f)).map((f) => `/media/contact/${f}`)
-  out.contact.videos = contact.filter((f) => /\.(mp4|webm)$/i.test(f)).map((f) => `/media/contact/${f}`)
+  const c = (f: string) => `/media/contact/${f}`
+  out.contact.images = contact.filter((f) => /\.(jpe?g|webp|avif)$/i.test(f) && !/-poster\./i.test(f)).map(c)
+  // Videos grouped by name: WebM first (smaller), then MP4; the poster is NAME-poster.(jpg|webp).
+  const names = [...new Set(contact.filter((f) => /\.(mp4|webm)$/i.test(f)).map((f) => f.replace(/\.(mp4|webm)$/i, '')))]
+  out.contact.videos = names.map((n) => ({
+    sources: contact.filter((f) => f === `${n}.webm`).concat(contact.filter((f) => f === `${n}.mp4`)).map(c),
+    poster: ((p) => (p ? c(p) : null))(contact.find((f) => f.startsWith(`${n}-poster.`) && /\.(jpe?g|webp)$/i.test(f))),
+  }))
   return out
 }
 
@@ -74,7 +80,7 @@ export default defineNuxtModule({
           '    projects: Record<string, string[]>',
           '    services: Record<string, { bg: string[]; bgSmall: string[]; loop: string[]; seq: string[] }>',
           '    team: string[]',
-          '    contact: { images: string[]; videos: string[] }',
+          '    contact: { images: string[]; videos: { sources: string[]; poster: string | null }[] }',
           '  }',
           '  export default media',
           '}',

@@ -19,7 +19,11 @@ Licence check: each Unsplash photo page was opened and confirmed to show the sta
 | `public/media/services/vision/bg.jpg` + `bg.webp` | [unsplash.com/photos/wSTCaQpiLtc](https://unsplash.com/photos/robotic-arm-on-circuit-board-wSTCaQpiLtc) | Louis Reed | Unsplash License | 2026-10-19 |
 | `public/media/services/staff/bg.jpg` + `bg.webp` | [unsplash.com/photos/l90zRbWvCoE](https://unsplash.com/photos/man-standing-beside-another-sitting-man-using-computer-l90zRbWvCoE) | Proxyclick Visitor Management System | Unsplash License | 2026-10-19 |
 | `public/media/services/training/bg.jpg` + `bg.webp` | [unsplash.com/photos/Hb6uWq0i4MI](https://unsplash.com/photos/selective-focus-photography-of-people-sitting-on-chairs-while-writing-on-notebooks-Hb6uWq0i4MI) | The Climate Reality Project | Unsplash License | 2026-10-19 |
-| `public/media/contact/photo.webp` | [unsplash.com/photos/XfpcUoV49MY](https://unsplash.com/photos/workbench-with-tools-in-a-rustic-workshop-XfpcUoV49MY) | Daniel Khilchenko | Unsplash License | 2026-10-19 |
+| `public/media/contact/01.webm`, `01.mp4`, `01-poster.jpg` | [Pexels 3256770 — "People Brainstorming"](https://www.pexels.com/video/people-brainstorming-3256770/) | fauxels | Pexels License (free) | 2026-10-20 (6 s portrait loop, 720×960, muted) |
+| `public/media/contact/02.webm`, `02.mp4`, `02-poster.jpg` | [Pexels 7857064 — "A Person Sketching Using Pen and Sketchpad"](https://www.pexels.com/video/a-person-sketching-using-pen-and-sketchpad-7857064/) | Greta Hoffman | Pexels License (free) | 2026-10-20 (6 s portrait loop, 720×960, muted) |
 
 Processing: originals fetched from the photo's own `images.unsplash.com` URL, resized (Lanczos) to
 2400 px wide (services: JPEG + WebP <= 400 KB), 1200 px WebP (contact) or 2560 px wide (project environments), JPEG, metadata stripped.
+
+Owner-supplied (not listed above, licence to be confirmed by the owner): `public/media/contact/photo-01.webp` … `photo-06.webp`
+(compressed from the six photos added on 2026-10-19), and the project screenshots in `public/media/projects/`.
