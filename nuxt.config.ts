@@ -5,6 +5,9 @@ export default defineNuxtConfig({
 
   modules: ['@nuxt/fonts'],
 
+  // Only .vue files are components: plain .ts modules live beside them (e.g. contact/handwriting.ts).
+  components: [{ path: '~/components', extensions: ['vue'] }],
+
   css: ['~/assets/css/tokens.css', '~/assets/css/base.css'],
 
   typescript: {
@@ -14,8 +17,17 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
-      title: 'US IT Source',
-      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
+      title: 'US IT Source — Custom software built around the way you work',
+      meta: [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'description', content: 'US IT Source designs and builds custom software, AI and computer vision around the way each business actually runs.' },
+        { name: 'theme-color', content: '#020306' },
+      ],
+      // PLACEHOLDER favicon (docs/PLACEHOLDERS.md) until the logotype exists.
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
+      ],
     },
   },
 
@@ -27,7 +39,8 @@ export default defineNuxtConfig({
     families: [
       { name: 'Geist', provider: 'google', weights: [300, 400, 500, 600] },
       { name: 'Geist Mono', provider: 'google', weights: [400, 500] },
-      { name: 'Instrument Serif', provider: 'google', weights: [400], styles: ['normal', 'italic'] },
+      // v2 display serif (ART_DIRECTION v2 §2): headlines, statements, project titles.
+      { name: 'Newsreader', provider: 'google', weights: [300], styles: ['normal', 'italic'] },
     ],
   },
 

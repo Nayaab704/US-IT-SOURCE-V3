@@ -1,66 +1,76 @@
 <script setup lang="ts">
-type Theme = 'night' | 'day'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-interface Scene {
-  id: string
-  index: string
-  label: string
-  theme: Theme
-}
+/**
+ * Homepage (ART_DIRECTION §4). In order: opening → hero (ribbon) → rectangle rule into paper → the
+ * line & flexible frame → Step Inside (white-out into paper) → View our projects → Five ways we build
+ * around you → let's work together + contact → footer. Each section owns its pin and timeline; pins
+ * refresh in page order (refreshPriority 5 / 4 / 3 / 2 / 1).
+ */
 
-// Order and atmosphere from ART_DIRECTION §4. Only scene 02's label is given verbatim;
-// the others are PLACEHOLDERS taken from the §4 scene titles — owner to confirm.
-const scenes: Scene[] = [
-  { id: 'hero', index: '01', label: 'Built to fit', theme: 'night' },
-  { id: 'problems', index: '02', label: 'The way you actually work', theme: 'day' },
-  { id: 'approach', index: '03', label: 'How we work', theme: 'day' },
-  { id: 'services', index: '04', label: 'Services', theme: 'night' },
-  { id: 'work', index: '05', label: 'Selected work', theme: 'night' },
-  { id: 'vision', index: '06', label: 'Vision & AI', theme: 'night' },
-  { id: 'people', index: '07', label: 'People', theme: 'day' },
-  { id: 'contact', index: '08', label: 'Conversation', theme: 'night' },
-]
+// Paper is the page's ground: it sits under the (z −1) stage canvas, so section backgrounds never
+// cover WebGL; the night sections paint their own void.
+useHead({ bodyAttrs: { class: 'ground-paper' } })
 
-// The nav's ink follows the night/day rhythm of these sections.
+const title = 'US IT Source — Custom software built around the way you work'
+const description = 'US IT Source designs and builds custom software, AI and computer vision around the way each business actually runs.'
+useSeoMeta({
+  title,
+  description,
+  ogTitle: title,
+  ogDescription: description,
+  ogType: 'website',
+  ogImage: '/og.jpg',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  twitterCard: 'summary_large_image',
+  twitterTitle: title,
+  twitterDescription: description,
+  twitterImage: '/og.jpg',
+})
+
+// Registered after every section's pin (this page's onMounted runs after its children's).
 useWorldSections()
+
+// Pin lengths depend on layout: refresh (debounced) once fonts, the page and lazy images are in.
+let timer: ReturnType<typeof setTimeout> | null = null
+const refresh = () => {
+  if (timer) clearTimeout(timer)
+  timer = setTimeout(() => ScrollTrigger.refresh(), 200)
+}
+const onImage = (e: Event) => {
+  if (e.target instanceof HTMLImageElement) refresh()
+}
+onMounted(() => {
+  void document.fonts?.ready.then(refresh)
+  if (document.readyState === 'complete') refresh()
+  else window.addEventListener('load', refresh, { once: true })
+  document.querySelector('main')?.addEventListener('load', onImage, true)
+})
+onBeforeUnmount(() => {
+  if (timer) clearTimeout(timer)
+  window.removeEventListener('load', refresh)
+  document.querySelector('main')?.removeEventListener('load', onImage, true)
+})
 </script>
 
 <template>
-  <UiSiteNav />
-  <main>
-    <section
-      v-for="scene in scenes"
-      :id="scene.id"
-      :key="scene.id"
-      class="scene"
-      data-scene
-      :data-world="scene.theme"
-    >
-      <p class="scene-index">{{ scene.index }} — {{ scene.label }}</p>
-    </section>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <UiPillNav />
+  <UiSiteMenu />
+  <main id="main" class="home" tabindex="-1">
+    <ScenesHeroSection :refresh-priority="5" />
+    <ScenesFlexframeFlexFrameSection :refresh-priority="4" />
+    <ScenesWorkProjectsSection :refresh-priority="3" />
+    <ScenesServicesSection :refresh-priority="2" />
+    <ScenesContactSection :refresh-priority="1" />
+    <ScenesContactSiteFooter />
   </main>
 </template>
 
 <style scoped>
-.scene {
-  min-height: 100svh;
-  padding: 120px var(--gutter) var(--gutter);
+.home {
+  position: relative;
 }
 
-.scene[data-world='night'] {
-  background: var(--night-1);
-  color: var(--night-muted);
-}
-
-.scene[data-world='day'] {
-  background: var(--paper);
-  color: var(--ink-muted);
-}
-
-.scene-index {
-  font-family: var(--font-mono);
-  font-size: var(--fs-mono-label);
-  letter-spacing: var(--tracking-mono);
-  text-transform: uppercase;
-}
 </style>
