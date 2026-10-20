@@ -1,0 +1,58 @@
+import type { FolderApi } from 'tweakpane'
+import { insideParams as P } from './params'
+
+/** Dev tuning for the INSIDE world (Tweakpane "inside" folder). */
+export function buildInsidePane(parent: FolderApi, hooks: { rebuild: () => void; onTextChange: () => void }) {
+  const f = parent.addFolder({ title: 'inside', expanded: false })
+  const fog = f.addFolder({ title: 'Fog', expanded: false })
+  fog.addBinding(P.fog, 'top', { label: 'sky top' })
+  fog.addBinding(P.fog, 'horizon')
+  fog.addBinding(P.fog, 'density', { min: 0, max: 0.03, step: 0.0005 })
+  fog.addBinding(P.fog, 'heightFalloff', { label: 'height falloff', min: 0, max: 0.3, step: 0.005 })
+  const dunes = f.addFolder({ title: 'Dunes', expanded: false })
+  dunes.addBinding(P.floor, 'duneAmplitude', { label: 'amplitude (rebuild)', min: 0, max: 10, step: 0.1 }).on('change', hooks.rebuild)
+  dunes.addBinding(P.floor, 'duneScale', { label: 'scale (rebuild)', min: 0.002, max: 0.04, step: 0.001 }).on('change', hooks.rebuild)
+  dunes.addBinding(P.floor, 'roughness', { min: 0, max: 1, step: 0.01 })
+  dunes.addBinding(P.floor, 'streak', { label: 'beam streak', min: 0, max: 3, step: 0.05 })
+  dunes.addBinding(P.floor, 'grain', { min: 0, max: 0.3, step: 0.005 })
+  const beam = f.addFolder({ title: 'Beam', expanded: false })
+  beam.addBinding(P.beam, 'intensity', { min: 0, max: 20, step: 0.1 })
+  beam.addBinding(P.beam, 'pool', { min: 0, max: 5, step: 0.05 })
+  beam.addBinding(P.beam, 'poolRadius', { label: 'pool radius', min: 4, max: 80, step: 1 })
+  beam.addBinding(P.beam, 'radius', { label: 'width (rebuild)', min: 1, max: 20, step: 0.5 }).on('change', hooks.rebuild)
+  const sh = f.addFolder({ title: 'Shards', expanded: false })
+  sh.addBinding(P.shards, 'count', { label: 'count (rebuild)', min: 500, max: 10000, step: 100 }).on('change', hooks.rebuild)
+  sh.addBinding(P.shards, 'size', { min: 0.05, max: 1.5, step: 0.01 })
+  sh.addBinding(P.shards, 'glint', { min: 0, max: 5, step: 0.05 })
+  sh.addBinding(P.shards, 'bokeh', { label: 'bokeh strength', min: 0, max: 3, step: 0.05 })
+  sh.addBinding(P.shards, 'bokehNear', { label: 'bokeh distance', min: 1, max: 30, step: 0.5 })
+  const li = f.addFolder({ title: 'Line', expanded: false })
+  li.addBinding(P.line, 'glow', { min: 0.5, max: 8, step: 0.05 })
+  li.addBinding(P.line, 'radius', { label: 'radius (rebuild)', min: 0.1, max: 2, step: 0.02 }).on('change', hooks.rebuild)
+  const cam = f.addFolder({ title: 'Camera', expanded: false })
+  cam.addBinding(P.camera, 'height', { min: 1, max: 8, step: 0.1 })
+  cam.addBinding(P.camera, 'glide', { label: 'glide (by q 0.70)', min: 0.3, max: 0.95, step: 0.01 })
+  cam.addBinding(P.camera, 'swayRoll', { label: 'sway roll (°)', min: 0, max: 3, step: 0.05 })
+  cam.addBinding(P.camera, 'swayYaw', { label: 'sway yaw (°)', min: 0, max: 5, step: 0.05 })
+  cam.addBinding(P.camera, 'look', { label: 'cursor look (°)', min: 0, max: 6, step: 0.1 })
+  const la = f.addFolder({ title: 'Lattice', expanded: false })
+  la.addBinding(P.lattice, 'shape', { options: { cylinder: 0, cuboctahedral: 1 } }).on('change', hooks.rebuild)
+  la.addBinding(P.lattice, 'radius', { label: 'radius (rebuild)', min: 8, max: 60, step: 1 }).on('change', hooks.rebuild)
+  la.addBinding(P.lattice, 'height', { label: 'height (rebuild)', min: 20, max: 200, step: 1 }).on('change', hooks.rebuild)
+  la.addBinding(P.lattice, 'spin', { min: 0, max: 0.3, step: 0.005 })
+  const tx = f.addFolder({ title: 'Text speeds (× scroll)', expanded: false })
+  P.text.speeds.forEach((_, i) => {
+    const o = { v: P.text.speeds[i]! }
+    tx.addBinding(o, 'v', { label: `phrase ${i + 1}`, min: 0, max: 2, step: 0.05 }).on('change', () => ((P.text.speeds[i] = o.v), hooks.onTextChange()))
+  })
+  P.text.labelSpeeds.forEach((_, i) => {
+    const o = { v: P.text.labelSpeeds[i]! }
+    tx.addBinding(o, 'v', { label: `label ${i + 1}`, min: 0, max: 2, step: 0.05 }).on('change', () => ((P.text.labelSpeeds[i] = o.v), hooks.onTextChange()))
+  })
+  const post = f.addFolder({ title: 'Bloom / post', expanded: false })
+  post.addBinding(P.post, 'bloomThreshold', { label: 'bloom threshold', min: 0.2, max: 8, step: 0.05 })
+  post.addBinding(P.post, 'bloomStrength', { label: 'bloom strength', min: 0, max: 3, step: 0.05 })
+  post.addBinding(P.post, 'exposure', { min: 0.2, max: 3, step: 0.01 })
+  post.addBinding(P.post, 'vignette', { min: 0, max: 1, step: 0.01 })
+  post.addBinding(P.post, 'grain', { min: 0, max: 0.15, step: 0.005 })
+}

@@ -34,6 +34,12 @@ export interface StageScene {
   setWorldWeight?(weight: number): void
   /** Optional: render even while this scene's world is out of view (e.g. a day glimpse through the night). */
   forceRender?(): boolean
+  /**
+   * Optional: warm up GPU work (shader programs, texture / video uploads) while the scene is still
+   * off screen, so its first visible frame doesn't stall mid-scroll. Called once per frame (before the
+   * clear) while the scene is ready but inactive, until it returns true. Draw nothing visible.
+   */
+  prewarm?(renderer: WebGLRenderer): boolean
   /** Release every geometry, material, texture and render target the scene created. */
   dispose(): void
 }
@@ -68,6 +74,8 @@ interface Entry {
   active: boolean
   ready: boolean
   initialising: boolean
+  /** prewarm() has completed (or the scene became active first). */
+  prewarmed: boolean
   removed: boolean
   triggers: ScrollTrigger[]
   progress: ScrollTrigger
@@ -78,6 +86,7 @@ interface Entry {
 // Module-level singleton: there is exactly one stage for the whole site (client only).
 const entries = new Map<string, Entry>()
 let drawList: Entry[] = []
+let prewarmList: Entry[] = []
 let renderer: WebGLRenderer | null = null
 let running = false
 let contextLost = false
@@ -123,6 +132,8 @@ const frame: gsap.TickerCallback = (time, deltaMs) => {
   tickPointer(delta)
 
   r.toneMappingExposure = stageParams.exposure
+  // Off-screen scenes warming up (before the clear: anything they touch is wiped).
+  for (const e of prewarmList) if (!e.prewarmed && e.scene.prewarm!(r)) ((e.prewarmed = true), syncLoop())
   r.info.reset()
   r.clear()
   const world = getWorld()
@@ -144,7 +155,8 @@ const frame: gsap.TickerCallback = (time, deltaMs) => {
 /** Start/stop the ticker so we never render when hidden or when nothing is on screen. */
 function syncLoop() {
   drawList = [...entries.values()].filter((e) => e.ready && e.active).sort((a, b) => a.order - b.order)
-  const shouldRun = !!renderer && !contextLost && !document.hidden && drawList.length > 0
+  prewarmList = [...entries.values()].filter((e) => e.ready && !e.active && !e.prewarmed && e.scene.prewarm)
+  const shouldRun = !!renderer && !contextLost && !document.hidden && (drawList.length > 0 || prewarmList.length > 0)
   if (shouldRun === running) return
   running = shouldRun
   if (running) {
@@ -235,6 +247,7 @@ export function registerScene(scene: StageScene, section: HTMLElement, options: 
     active: false,
     ready: false,
     initialising: false,
+    prewarmed: false,
     removed: false,
     folder: null,
     paneRoot: null,

@@ -35,6 +35,8 @@ export interface DayScene extends StageScene {
   setApertureSource(source: (() => Aperture | null) | null): void
   /** The warm light on the paper (paper × light tint), sRGB hex — for objects lit by the window. */
   warmLightHex(): string
+  /** How much of the window light (and its shadows) reaches the paper, 0–1 (flat paper at 0). */
+  setLightAmount(amount: number): void
 }
 
 const TAU = Math.PI * 2
@@ -43,10 +45,12 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
   let presetName: DayPresetName = options.preset ?? 'problems'
   const params = dayPresetParams(presetName)
   let isMobile = false
+  let lightAmount = 1
   const reducedMotion = useReducedMotion()
   const pointer = usePointer()
 
   const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1)
+  let compileStage = 0
   const geometry = new PlaneGeometry(2, 2)
   const vertexShader = loadShader('fullscreen.vert')
   const tmp = new Color()
@@ -218,8 +222,8 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
     tintMultiplier(p.light.tint, 1 + p.light.intensity, L.uWarm.value)
     tintMultiplier(p.frame.tint, 1 - p.frame.strength, L.uCool.value)
     // A passing cloud dims the light and, a little less, the shadows it casts.
-    L.uLight.value = 1 - cloudDim
-    L.uShadow.value = 1 - 0.7 * cloudDim
+    L.uLight.value = (1 - cloudDim) * lightAmount
+    L.uShadow.value = (1 - 0.7 * cloudDim) * lightAmount
     L.uMullions.value = Math.round(Math.min(3, Math.max(1, p.frame.mullions)))
     L.uTransom.value = p.frame.transom
     L.uBar.value = p.frame.bar
@@ -373,6 +377,10 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
       compositeUniforms.uOpacity.value = weight
     },
 
+    setLightAmount(amount) {
+      lightAmount = Math.min(1, Math.max(0, amount))
+    },
+
     setApertureSource(source) {
       apertureSource = source
     },
@@ -408,6 +416,35 @@ export function createDayScene(options: { id?: string; preset?: DayPresetName } 
       syncTarget()
       aperture = apertureSource?.() ?? null
       syncAperture()
+    },
+
+    /**
+     * At load, off screen: one light pass into its target and one composite scissored to a single
+     * pixel (wiped by the stage's clear right after) — compiles both programs before the first real
+     * frame, so activating mid-scroll doesn't hitch.
+     */
+    prewarm(r) {
+      // Compile both programs in parallel first (non-blocking), then draw once to upload / settle.
+      if (compileStage === 0) {
+        compileStage = 1
+        const prev = r.getRenderTarget()
+        r.setRenderTarget(target)
+        const a = r.compileAsync(lightScene, camera)
+        r.setRenderTarget(null)
+        const b = r.compileAsync(compositeScene, camera)
+        r.setRenderTarget(prev)
+        void Promise.all([a, b]).then(() => (compileStage = 2))
+        return false
+      }
+      if (compileStage === 1) return false
+      r.setRenderTarget(target)
+      r.render(lightScene, camera)
+      r.setRenderTarget(null)
+      r.setScissor(0, 0, 1, 1)
+      r.setScissorTest(true)
+      r.render(compositeScene, camera)
+      r.setScissorTest(false)
+      return true
     },
 
     render(r) {

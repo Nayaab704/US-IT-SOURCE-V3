@@ -51,3 +51,50 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/*
+ * Sections that need WebGL in FRONT of their own HTML (e.g. a line passing over a headline) set
+ * html.stage-front while on screen: the transparent stage canvas (pointer-events: none) rises above
+ * page content; anything that must stay on top of it uses z-index >= 2.
+ */
+html.stage-front canvas.stage {
+  z-index: 1;
+}
+
+/* Light, not paint (F3 leaf light): over the page, the canvas multiplies — white is neutral. */
+html.stage-multiply canvas.stage {
+  mix-blend-mode: multiply;
+}
+
+/* Pages whose ground is paper (the homepage): the root background paints UNDER the stage canvas. */
+body.ground-paper {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* Keyboard: a visible focus ring everywhere (components may refine it). */
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* "Skip to content": off screen until focused. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 0.2s;
+}
+
+.skip-link:focus {
+  transform: none;
+}

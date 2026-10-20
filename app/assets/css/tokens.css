@@ -1,6 +1,11 @@
 /* Design tokens — source of truth: docs/ART_DIRECTION.md §2 */
 
 :root {
+  /* ── Color: v2 void (ART_DIRECTION v2 §2) — near-pure black, no fog, no glow ── */
+  --void: #020306;
+  --rim: #3b5bff;
+  --warm-glint: #f0c58c;
+
   /* ── Color: night ─────────────────────────────── */
   --night-0: #04060c;      /* deepest black-blue */
   --night-1: #0a1222;      /* base night */
@@ -27,7 +32,8 @@
 
   /* ── Type families ────────────────────────────── */
   --font-sans: 'Geist', system-ui, sans-serif;
-  --font-serif: 'Instrument Serif', Georgia, serif;
+  /* v2 display face (Newsreader, optical sizes) — headlines and statements. */
+  --font-display: 'Newsreader', Georgia, serif;
   --font-mono: 'Geist Mono', ui-monospace, monospace;
 
   /* Mono labels: uppercase, tracked +0.14–0.16em */

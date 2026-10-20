@@ -161,6 +161,8 @@ onMounted(() => {
   split = SplitText.create(root.value, {
     type: 'lines',
     linesClass: 'glass-line',
+    // No aria-label on the wrapper (prohibited on a plain span/div); the split lines stay readable.
+    aria: 'none',
     // Re-splits on width change and once web fonts load (line breaks depend on both).
     autoSplit: true,
     onSplit: (self) => build(self),

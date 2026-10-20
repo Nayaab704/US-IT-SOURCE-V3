@@ -29,7 +29,7 @@ const steps = [
       </section>
 
       <section class="block">
-        <UiGlassText as="p" class="mono">02 — The way you actually work</UiGlassText>
+        <UiGlassText as="p" class="mono">The way you actually work</UiGlassText>
       </section>
 
       <!-- Performance block: 4 long paragraphs crossing the band together. -->
@@ -114,7 +114,7 @@ const steps = [
 
 .serif {
   max-width: 14em;
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: var(--fs-h1);
   line-height: 1.05;

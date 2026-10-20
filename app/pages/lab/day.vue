@@ -34,7 +34,7 @@ onMounted(() => {
     <!-- Transparent: the day atmosphere on the stage is the background. -->
     <section ref="daySection" class="day" data-world="day">
       <div class="copy">
-        <p class="label">02 — THE WAY YOU ACTUALLY WORK</p>
+        <p class="label">THE WAY YOU ACTUALLY WORK</p>
         <h2 class="serif">Every business has its own way of working.</h2>
         <p class="body">Most software ignores it. We start by learning it.</p>
       </div>
@@ -80,7 +80,7 @@ onMounted(() => {
 }
 
 .serif {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(40px, 5.56vw, 80px);
   line-height: 1.02;

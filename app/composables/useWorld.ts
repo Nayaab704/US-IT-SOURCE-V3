@@ -37,19 +37,42 @@ const smoothstep = (a: number, b: number, x: number) => {
  * switches at 50% coverage while the night keeps rendering until it is fully covered.
  */
 export type WorldOverride = () => { ink: number; render: number } | null
-let override: WorldOverride | null = null
+/** Active providers; the first one returning non-null wins (several sections can each own one). */
+let providers: WorldOverride[] = []
+let legacy: WorldOverride | null = null
 let running = false
 
+const override = () => {
+  for (const p of providers) {
+    const o = p()
+    if (o) return o
+  }
+  return null
+}
+
+/** Add a provider for the lifetime of a section; returns its removal. */
+export function addWorldOverride(provider: WorldOverride): () => void {
+  providers.push(provider)
+  if (!running) start()
+  return () => {
+    providers = providers.filter((p) => p !== provider)
+    if (providers.length === 0 && running && sections.length === 0) stop()
+  }
+}
+
+/** Single-slot form (labs): replaces the previous provider set this way. */
 export function setWorldOverride(provider: WorldOverride | null) {
-  override = provider
+  if (legacy) providers = providers.filter((p) => p !== legacy)
+  legacy = provider
+  if (provider) providers.push(provider)
   if (provider && !running) start()
-  else if (!provider && running && sections.length === 0) stop()
+  else if (providers.length === 0 && running && sections.length === 0) stop()
 }
 
 /** World for rendering (stage weights). Reversible: a pure function of scroll / the override. */
 export function getWorld(): number {
   if (import.meta.dev && worldParams.override) return worldParams.value
-  const o = override?.()
+  const o = override()
   if (o) return o.render
   return sectionWorld()
 }
@@ -57,7 +80,7 @@ export function getWorld(): number {
 /** World for DOM ink (`--world`). */
 export function getInkWorld(): number {
   if (import.meta.dev && worldParams.override) return worldParams.value
-  const o = override?.()
+  const o = override()
   if (o) return o.ink
   return sectionWorld()
 }
@@ -136,6 +159,6 @@ export function useWorldSections() {
     own.forEach((s) => s.trigger.kill())
     sections = sections.filter((s) => !own.includes(s))
     own = []
-    if (sections.length === 0 && !override) stop()
+    if (sections.length === 0 && providers.length === 0) stop()
   })
 }
