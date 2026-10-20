@@ -62,18 +62,18 @@ Backgrounds are auto-detected: `public/media/services/<slug>/bg.avif|webp|jpg` (
 
 | ✓ | Slot | Expected file / value | Where it appears | Size / format | State | Search terms |
 |---|---|---|---|---|---|---|
-| [ ] | Software & Apps — background | `public/media/services/software/bg.webp` (+ `bg.jpg`) | `ServicesSection` chapter 1, `/` and `/lab/services` | 2400×1600, WebP/AVIF ≤ 400 KB | stock (ThisisEngineering) | "engineers laptop workshop" |
+| [x] | Software & Apps — background | `public/media/services/software/bg.webp` (+ `bg-1600.webp`, `bg.jpg`) | chapter 1 | 2400×1600 | **yours** (re-encoded from the 6048 px original) — confirm licence | — |
 | [ ] | AI Modeling — background | `.../services/ai/bg.webp` | chapter 2 | same | stock (Beatriz Cattel) | "hand drawing diagram whiteboard" |
-| [ ] | Computer Vision & ML — background | `.../services/vision/bg.webp` | chapter 3 (detection boxes are placed on this photo — re-place `boxes` in `app/data/services.ts` if it changes) | same | stock (Louis Reed) | "pick and place pcb machine", "machine vision inspection line" |
-| [ ] | Staff Augmentation — background | `.../services/staff/bg.webp` | chapter 4 | same | stock (Proxyclick) | "engineers working together office" |
+| [x] | Computer Vision & ML — background | `public/media/services/vision/bg.webp` (+ `bg-1600.webp`, `bg.jpg`) | chapter 3 (no detection boxes any more) | 2400×1600 | **yours** (re-encoded from the 9536 px original) — confirm licence | — |
+| [x] | Staff Augmentation — background | `public/media/services/staff/bg.webp` (+ `bg-1600.webp`, `bg.jpg`) | chapter 4 | 2400×1600 | **yours** (re-encoded) — confirm licence | — |
 | [ ] | Technical Training — background | `.../services/training/bg.webp` | chapter 5 | same | stock (The Climate Reality Project) | "hands-on technical training session" |
 | [ ] | Software & Apps — phone screens | Garage Automation screens (`public/media/projects/garage-automation/NN-mobile.png` preferred, else any) | chapter 1 phone frame, crossfading every 1.6 s | phone 1170×2532 | label ("[Garage Automation screen NN]") | — (real screens only) |
 | [ ] | AI Modeling — desktop screens | Nester screens (`public/media/projects/nester/NN.png`) | chapter 2 desktop frame | 2880×1800 | label | — (real screens only) |
-| [ ] | Staff Augmentation — team cards | `public/media/team/*.jpg` (first three, alphabetical) | chapter 4 cards | 1200×1500 (4:5) ≤ 250 KB | label ("[Team portrait]") | — (real staff only, with consent) |
-| [ ] | Technical Training — media | `public/media/services/training/loop.webm` + `loop.mp4`, or `seq-01.jpg` … | chapter 5, 16:9 frame | loop 1280–1920 wide ≤ 4 MB; seq 1600 wide ≤ 250 KB | label ("[Training video or photo sequence]") | — |
+| [ ] | Staff Augmentation — team cards | `public/media/team/*.jpg` (first three, alphabetical) | chapter 4 cards — **hidden until portraits exist** | 1200×1500 (4:5) ≤ 250 KB | none yet | — (real staff only, with consent) |
+| [x] | Technical Training — media | `public/media/services/training/seq-01.jpg … seq-03.jpg` (a slow photo sequence; a `loop.webm/.mp4` would take priority) | chapter 5, 16:9 frame | 1600 wide ≤ 250 KB | **yours** (re-encoded) — confirm licence | — |
 | [ ] | Lines (5) | Software & Apps — "Apps and systems that follow your exact steps." · AI Modeling — "Models trained on your data, for a job you actually have." · Computer Vision & ML — "Cameras and models that see what matters in your operation." · Staff Augmentation — "Engineers who join your team and work your way." · Technical Training — "Hands-on training that makes your team confident with the tools they use every day." | top-right of each chapter (`app/data/services.ts`) | — | owner text, **editable** | — |
-| [ ] | Scope lines (5) | `scope:` per service in `app/data/services.ts` | bottom-right of each chapter | Geist 12px, one or two short lines | label ("[PLACEHOLDER: scope]") — **not supplied** | — |
-| [ ] | Detection labels | "sheet", "part", "edge", "tool" | chapter 3 boxes | generic words, no numbers | implementer's choice — confirm | — |
+| [ ] | Scope lines (5) | `scope:` per service in `app/data/services.ts` | bottom-right of each chapter | Geist 12px, one or two short lines | **not supplied — hidden until written** | — |
+| [x] | Detection labels | — | — | — | removed (the vision chapter is the photo alone) | — |
 
 ## let's work together + contact (F3 — built)
 | ✓ | Slot | Expected file / value | Where it appears | Size / format | State | Search terms |
