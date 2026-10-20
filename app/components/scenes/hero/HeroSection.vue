@@ -18,6 +18,7 @@ export const heroTransition = {
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type { OpeningMode, OpeningWorld, RevealKind } from '~/components/ui/Opening.client.vue'
+import { OPENING_ITEMS } from '~/utils/opening'
 import { addWorldOverride } from '~/composables/useWorld'
 import { createRibbonScene, type RibbonScene } from '~/utils/ribbon/scene'
 
@@ -61,6 +62,8 @@ const world: OpeningWorld = {
 const route = useRoute()
 const mode = computed<OpeningMode>(() => {
   const q = route.query.opening
+  // Arriving with a target (e.g. back from a case study to the contact section): no opening.
+  if (route.query.to) return 'off'
   return q === 'first' || q === 'repeat' || q === 'off' ? q : 'auto'
 })
 function onReveal(kind: RevealKind) {
@@ -208,8 +211,18 @@ onBeforeUnmount(() => {
     </div>
     <ClientOnly>
       <UiOpening :ready="ready" :world="world" :mode="mode" @reveal="onReveal" @done="onDone" />
+      <!-- The opening's first frame, server-rendered: the same words where the opening starts them. -->
       <template #fallback>
-        <div class="opening-cover" aria-hidden="true" />
+        <div v-if="!route.query.to" class="opening-cover" aria-hidden="true">
+          <span
+            v-for="it in OPENING_ITEMS"
+            :key="it.id"
+            class="opening-item"
+            :class="[it.kind, { 'desktop-only': !it.mobile }]"
+            :style="{ left: `${it.x * 100}%`, top: `${it.y * 100}%` }"
+            >{{ it.text }}</span
+          >
+        </div>
       </template>
     </ClientOnly>
   </section>
@@ -240,6 +253,40 @@ onBeforeUnmount(() => {
   position: fixed;
   inset: 0;
   z-index: 900;
+  overflow: hidden;
   background: var(--paper-raised);
+  color: var(--ink);
+}
+
+/* Must match the opening's own item styles (Opening.client.vue). */
+.opening-item {
+  position: absolute;
+  white-space: nowrap;
+  translate: 0 -50%;
+}
+
+.opening-item.word {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(48px, 5.83vw, 84px);
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+
+.opening-item.label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 767px) {
+  .opening-item.word {
+    font-size: 48px;
+  }
+
+  .opening-item.desktop-only {
+    display: none;
+  }
 }
 </style>

@@ -98,3 +98,10 @@ body.ground-paper {
 .skip-link:focus {
   transform: none;
 }
+
+/* Never a horizontal page scroll (wide decorative layers, 100vw vs. classic scrollbars). `clip`, not
+   `hidden`: it creates no scroll container, so sticky / fixed / pinned elements keep working. */
+html,
+body {
+  overflow-x: clip;
+}

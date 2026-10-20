@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import gsap from 'gsap'
+import { OPENING_ITEMS, type OpeningItem } from '~/utils/opening'
 
 /**
  * The opening (phase R2): a white page of drifting words; a black bar slides to the centre — a
@@ -8,7 +9,9 @@ import gsap from 'gsap'
  *
  * The window is a hole in the white layer (clip-path, even-odd), so the stage canvas shows through
  * and words are cut wherever the card overlaps them. At full screen the layer is simply removed.
- * Runs while assets load: it holds at the portrait card until `ready`, never longer than ~7 s.
+ * Plays on every homepage load. Runs while assets load: the words keep drifting and it holds at the
+ * portrait card until the hero is ready (compiled and drawn), never longer than ~10 s. Its first frame
+ * is server-rendered (HeroSection's fallback), so there is never a blank white screen before it.
  */
 
 export interface OpeningWorld {
@@ -24,36 +27,16 @@ const props = withDefaults(defineProps<{ ready: boolean; world: OpeningWorld | n
 })
 const emit = defineEmits<{ reveal: [kind: RevealKind]; done: [] }>()
 
-const SEEN_KEY = 'usits:opening-seen'
-/** Grow starts no later than this (s) so the whole opening ends within ~7 s. */
-const LATEST_GROW = 5.2
+/** Grow starts no later than this (s), assets or not (a safety net for a very slow load). */
+const LATEST_GROW = 10
 
 const reducedMotion = useReducedMotion()
 const { isMobile } = useDevice()
 const lenis = useLenis()
 const { time, zone } = useLocalTime()
 
-interface Item {
-  id: string
-  text: string
-  kind: 'word' | 'label'
-  /** Start position (fractions of the viewport), drift speed (px/s, sign = direction). */
-  x: number
-  y: number
-  speed: number
-  mobile: boolean
-}
-// Loose editorial scatter over five rows — hand-placed, deliberately not a grid, not centred.
-const ITEMS: Item[] = [
-  { id: 'built', text: 'Built', kind: 'word', x: 0.07, y: 0.12, speed: 26, mobile: true },
-  { id: 'loc', text: '[CITY, STATE]', kind: 'label', x: 0.62, y: 0.17, speed: 44, mobile: false },
-  { id: 'route', text: 'A → D → B → F', kind: 'label', x: 0.31, y: 0.29, speed: -60, mobile: true },
-  { id: 'you', text: 'you work.', kind: 'word', x: 0.66, y: 0.33, speed: -20, mobile: true },
-  { id: 'around', text: 'around', kind: 'word', x: 0.52, y: 0.5, speed: -38, mobile: true },
-  { id: 'time', text: '', kind: 'label', x: 0.88, y: 0.58, speed: 18, mobile: true },
-  { id: 'theway', text: 'the way', kind: 'word', x: 0.18, y: 0.66, speed: 52, mobile: true },
-  { id: 'est', text: 'EST [YEAR]', kind: 'label', x: 0.1, y: 0.84, speed: -30, mobile: false },
-]
+type Item = OpeningItem
+const ITEMS = OPENING_ITEMS
 
 const active = ref(true)
 const layer = ref<HTMLElement | null>(null)
@@ -150,25 +133,9 @@ function pushWorld() {
   props.world?.setDolly(world.dolly)
 }
 
-function markSeen() {
-  try {
-    sessionStorage.setItem(SEEN_KEY, '1')
-  } catch {
-    /* storage blocked: every visit is a first visit */
-  }
-}
-function seenBefore() {
-  try {
-    return sessionStorage.getItem(SEEN_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
 function finish(kind: RevealKind) {
   if (finished) return
   finished = true
-  markSeen()
   world.inflate = 1
   world.dolly = 1
   pushWorld()
@@ -214,7 +181,8 @@ function maybeGrow() {
 
 function buildFirst() {
   intro = gsap.timeline({ onUpdate: drawWindow, onComplete: () => ((introDone = true), maybeGrow()) })
-  intro.fromTo(itemEls.value, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: 'power2.out' }, 0)
+  // The words are already on screen (server-rendered first frame): no fade-in from nothing.
+  gsap.set(itemEls.value, { autoAlpha: 1 })
   // Bar: 42 px × 62 % enters from the left edge and slides to the centre…
   intro.set(win, { cx: 0, cxPx: -21, w: 0, wPx: 42, h: 0.62, r: 0 }, 0.6)
   intro.to(win, { cx: 0.5, cxPx: 0, duration: 0.9, ease: 'power3.inOut' }, 0.6)
@@ -264,7 +232,8 @@ function start() {
     finish('static')
     return
   }
-  variant = reducedMotion.value ? 'static' : forced === 'repeat' || (forced === 'auto' && seenBefore()) ? 'repeat' : 'first'
+  // Every load plays the full opening ('repeat' only when asked for with ?opening=repeat).
+  variant = reducedMotion.value ? 'static' : forced === 'repeat' ? 'repeat' : 'first'
   layoutItems()
   world.inflate = 0
   world.dolly = 0.85
@@ -297,8 +266,10 @@ onMounted(async () => {
   window.addEventListener('resize', onResize, { passive: true })
   window.addEventListener('pointerdown', skip)
   window.addEventListener('keydown', skip)
+  // Same place as the server-rendered first frame, before the browser paints this one.
+  layoutItems()
   gsap.ticker.add(onTick)
-  // Words must be in their real typeface before they are seen (no swap mid-fade).
+  // The choreography starts once the words are in their real typeface (they drift meanwhile).
   await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 800))])
   fontsReady.value = true
   await nextTick()
@@ -349,8 +320,6 @@ defineExpose({ skip })
   left: 0;
   white-space: nowrap;
   will-change: transform;
-  /* Hidden until the timeline fades them in (no flash before fonts are ready). */
-  visibility: hidden;
 }
 
 .word {

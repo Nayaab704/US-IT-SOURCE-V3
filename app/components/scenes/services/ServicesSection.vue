@@ -28,15 +28,11 @@ const names: (GlassHandle | null)[] = []
 const lines: HTMLElement[] = []
 const visuals: HTMLElement[] = []
 const pills: HTMLElement[] = []
-const boxes: HTMLElement[][] = services.map(() => [])
 const setEl = (arr: HTMLElement[], i: number) => (el: unknown) => {
   if (el instanceof HTMLElement) arr[i] = el
 }
 const setGlass = (i: number) => (el: unknown) => {
   names[i] = (el as GlassHandle | null) ?? null
-}
-const setBox = (k: number, i: number) => (el: unknown) => {
-  if (el instanceof HTMLElement) boxes[k]![i] = el
 }
 
 const prefersReduced = useReducedMotion()
@@ -124,15 +120,8 @@ function render() {
       }
     }
 
-    // Chapter progress after its entrance (detection boxes); the staff cards fan out as it arrives.
-    const p = clamp01((t - s - T) / (P.pin.chapter - T))
-    progress[k] = services[k]!.visual === 'cards' ? ease2(clamp01((t - s - T * 0.25) / (T * 0.8))) : p
-    const bx = boxes[k]!
-    bx.forEach((el, i) => {
-      const at = (i + 0.5) / (bx.length + 1)
-      const o = reduced ? (wipe >= 1 ? 1 : wipe) : clamp01((p - at) / 0.06)
-      el.style.opacity = o.toFixed(3)
-    })
+    // Chapter progress after its entrance (the staff cards fan out as it arrives).
+    progress[k] = services[k]!.visual === 'cards' ? ease2(clamp01((t - s - T * 0.25) / (T * 0.8))) : clamp01((t - s - T) / (P.pin.chapter - T))
 
     // Name: rises in from below; leaves behind glass.
     const nameIn = reduced ? wipe : ease3out(clamp01((t - s - 0.04) / (T * 0.8)))
@@ -234,21 +223,18 @@ function buildTimeline() {
   tl.to(state, { t: len, duration: len, onUpdate: render }, 0)
 }
 
-/** Phones: each card scrubs its own Ken Burns and boxes; the sticky pill row follows the cards. */
+/** Phones: each card scrubs its own Ken Burns; the sticky pill row follows the cards. */
 function buildMobile() {
   const cards = root.value?.querySelectorAll<HTMLElement>('.svm-card') ?? []
   cards.forEach((card, k) => {
     const bg = card.querySelector<HTMLElement>('.sv-bg')
-    const bx = [...card.querySelectorAll<HTMLElement>('.sv-box')]
     ScrollTrigger.create({
       trigger: card,
       start: 'top bottom',
       end: 'bottom top',
       onUpdate: (st) => {
         if (bg && !reducedMotion.value) bg.style.transform = `scale(${(P.kenBurns.from + (P.kenBurns.to - P.kenBurns.from) * st.progress).toFixed(4)})`
-        const p = clamp01((st.progress - 0.3) / 0.4)
-        progress[k] = p
-        bx.forEach((el, i) => (el.style.opacity = String(reducedMotion.value ? 1 : clamp01((p - (i + 0.5) / (bx.length + 1)) / 0.08))))
+        progress[k] = clamp01((st.progress - 0.3) / 0.4)
       },
     })
     ScrollTrigger.create({
@@ -312,7 +298,6 @@ onBeforeUnmount(() => {
 
 const bgStyle = (aspect: number) => ({ '--aspect': String(aspect) })
 const gradeStyle = (s: (typeof services)[number]) => ({ background: s.grade.color, mixBlendMode: s.grade.blend, opacity: String(s.grade.opacity) })
-const boxStyle = (b: { x: number; y: number; w: number; h: number }) => ({ left: `${b.x * 100}%`, top: `${b.y * 100}%`, width: `${b.w * 100}%`, height: `${b.h * 100}%` })
 </script>
 
 <template>
@@ -329,9 +314,6 @@ const boxStyle = (b: { x: number; y: number; w: number; h: number }) => ({ left:
           </picture>
           <div v-else class="sv-ph-bg grain" />
           <div class="sv-grade" :style="gradeStyle(s)" />
-          <div v-if="s.boxes && s.bg.length" class="sv-boxes">
-            <span v-for="(b, i) in s.boxes" :key="i" :ref="setBox(k, i)" class="sv-box" :style="boxStyle(b)"><span class="sv-box-label">{{ b.label }}</span></span>
-          </div>
         </div>
         <div class="sv-legible" />
       </div>
@@ -362,9 +344,9 @@ const boxStyle = (b: { x: number; y: number; w: number; h: number }) => ({ left:
         </div>
         <div :ref="setEl(lines, k)" class="sv-copy">
           <p class="sv-line">{{ s.line }}</p>
-          <p class="sv-scope">{{ s.scope ?? '[PLACEHOLDER: scope]' }}</p>
+          <p v-if="s.scope" class="sv-scope">{{ s.scope }}</p>
         </div>
-        <div :ref="setEl(visuals, k)" class="sv-visual">
+        <div v-if="s.visual !== 'none'" :ref="setEl(visuals, k)" class="sv-visual">
           <ScenesServicesServiceVisual :service="s" :active="active === k" :progress="s.visual === 'cards' ? (progress[k] ?? 0) : 0" :reduced="reducedMotion" />
         </div>
       </div>
@@ -387,19 +369,16 @@ const boxStyle = (b: { x: number; y: number; w: number; h: number }) => ({ left:
             </picture>
             <div v-else class="sv-ph-bg grain" />
             <div class="sv-grade" :style="gradeStyle(s)" />
-            <div v-if="s.boxes && s.bg.length" class="sv-boxes">
-              <span v-for="(b, i) in s.boxes" :key="i" class="sv-box" :style="boxStyle(b)"><span class="sv-box-label">{{ b.label }}</span></span>
-            </div>
           </div>
           <div class="sv-legible" />
         </div>
         <div class="svm-body">
           <p class="sv-line">{{ s.line }}</p>
           <h3 class="sv-name">{{ s.name }}</h3>
-          <div class="svm-visual">
+          <div v-if="s.visual !== 'none'" class="svm-visual">
             <ScenesServicesServiceVisual :service="s" :active="active === services.indexOf(s)" :progress="s.visual === 'cards' ? (progress[services.indexOf(s)] ?? 0) : 0" :reduced="reducedMotion" />
           </div>
-          <p class="sv-scope">{{ s.scope ?? '[PLACEHOLDER: scope]' }}</p>
+          <p v-if="s.scope" class="sv-scope">{{ s.scope }}</p>
         </div>
       </article>
     </section>
@@ -445,7 +424,7 @@ const boxStyle = (b: { x: number; y: number; w: number; h: number }) => ({ left:
   visibility: hidden;
 }
 
-/* The photo's own box, covering the viewport at the photo's aspect (boxes live in photo space). */
+/* The photo's own box, covering the viewport at the photo's aspect. */
 .sv-bg {
   position: absolute;
   left: 50%;
@@ -476,34 +455,6 @@ const boxStyle = (b: { x: number; y: number; w: number; h: number }) => ({ left:
 .sv-grade {
   position: absolute;
   inset: 0;
-}
-
-.sv-boxes {
-  position: absolute;
-  inset: 0;
-}
-
-.sv-box {
-  position: absolute;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  border-radius: 3px;
-  opacity: 0;
-}
-
-.sv-box-label {
-  position: absolute;
-  /* Top-right corner: clear of the pill menu on the left. */
-  right: -1px;
-  bottom: 100%;
-  margin-bottom: 4px;
-  padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #111;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.3;
-  letter-spacing: 0.04em;
-  border-radius: 2px;
 }
 
 /*
@@ -741,7 +692,4 @@ const boxStyle = (b: { x: number; y: number; w: number; h: number }) => ({ left:
   min-height: 46vh;
 }
 
-.svm .sv-box {
-  transition: opacity 0.2s;
-}
 </style>

@@ -25,7 +25,7 @@ function go(e: MouseEvent, key: MenuKey) {
       </nav>
     </div>
     <div class="ft-row ft-small">
-      <span>[LOCATION]</span>
+      <!-- Location: added once supplied (docs/PLACEHOLDERS.md). -->
       <a href="#" aria-label="US IT Source on LinkedIn (link to be added)">LinkedIn</a>
       <span>© 2026 US IT Source</span>
       <a href="#top" class="ft-top" @click.prevent="scrollTo(0, { duration: 1.6 })">Back to top ↑</a>

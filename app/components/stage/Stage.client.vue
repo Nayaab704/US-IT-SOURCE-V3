@@ -3,6 +3,8 @@ import { ACESFilmicToneMapping, SRGBColorSpace, WebGLRenderer } from 'three'
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const isDev = import.meta.dev
+// The stats readout only in dev and only on request (?debug).
+const showHud = isDev && new URLSearchParams(window.location.search).has('debug')
 const hud = ref('')
 let ownsRenderer = false
 let hudTimer: ReturnType<typeof setInterval> | undefined
@@ -33,7 +35,7 @@ onMounted(async () => {
   attachRenderer(renderer)
   ownsRenderer = true
 
-  if (isDev) {
+  if (showHud) {
     let lastFrames = 0
     let lastTime = performance.now()
     hudTimer = setInterval(() => {
@@ -58,7 +60,7 @@ onBeforeUnmount(() => {
 
 <template>
   <canvas ref="canvas" class="stage" aria-hidden="true" />
-  <pre v-if="isDev" class="stage-hud" aria-hidden="true">{{ hud }}</pre>
+  <pre v-if="showHud" class="stage-hud" aria-hidden="true">{{ hud }}</pre>
 </template>
 
 <style scoped>

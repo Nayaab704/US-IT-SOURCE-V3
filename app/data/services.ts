@@ -2,19 +2,10 @@ import media from '#build/media-manifest.mjs'
 
 /**
  * "Five ways we build around you" (F2). Names and lines are owner text (editable, listed in
- * docs/PLACEHOLDERS.md); the scope lines are not supplied yet and render as visible placeholders.
+ * docs/PLACEHOLDERS.md); the scope lines are not supplied yet and are simply not shown until they are.
  * Backgrounds come from public/media/services/<slug>/bg.(avif|webp|jpg) (auto-detected).
  */
-export type ServiceVisual = 'phone' | 'desktop' | 'detect' | 'cards' | 'media'
-
-/** A detection box in photo space (0–1 of the photo's width / height) with a generic label. */
-export interface DetectBox {
-  x: number
-  y: number
-  w: number
-  h: number
-  label: string
-}
+export type ServiceVisual = 'phone' | 'desktop' | 'cards' | 'media' | 'none'
 
 export interface Service {
   slug: string
@@ -29,9 +20,8 @@ export interface Service {
   bg: string[]
   /** One <source> per format: srcset with the 1600 px variant when it exists (2400 px otherwise). */
   sources: { type: string; srcset: string }[]
-  /** Photo aspect (w / h) — the detection boxes are placed in photo space. */
+  /** Photo aspect (w / h). */
   aspect: number
-  boxes?: DetectBox[]
   /** Media visual (training): a muted loop, else a photo sequence. */
   loop?: string[]
   seq?: string[]
@@ -79,18 +69,11 @@ export const services: Service[] = [
     line: 'Cameras and models that see what matters in your operation.',
     scope: null,
     grade: { color: '#5d7fa8', blend: 'soft-light', opacity: 0.6 },
-    visual: 'detect',
+    // The photo carries this chapter on its own (with the slow Ken Burns); no side visual.
+    visual: 'none',
     bg: svc('vision').bg,
     sources: sourcesFor('vision'),
     aspect: 3 / 2,
-    // Placed on the current photo (pick-and-place head over PCB panels). Re-place if the photo changes.
-    boxes: [
-      { x: 0.15, y: 0.36, w: 0.575, h: 0.12, label: 'sheet' },
-      { x: 0.25, y: 0.495, w: 0.1725, h: 0.06, label: 'part' },
-      { x: 0.585, y: 0.491, w: 0.1775, h: 0.06, label: 'part' },
-      { x: 0.77, y: 0.53, w: 0.15, h: 0.055, label: 'edge' },
-      { x: 0.44, y: 0.06, w: 0.12, h: 0.19, label: 'tool' },
-    ],
   },
   {
     slug: 'staff',
@@ -98,7 +81,8 @@ export const services: Service[] = [
     line: 'Engineers who join your team and work your way.',
     scope: null,
     grade: { color: '#b9dcb0', blend: 'soft-light', opacity: 0.5 },
-    visual: 'cards',
+    // Real team portraits only: until they exist, no side visual (never stock faces).
+    visual: media.team.length ? 'cards' : 'none',
     bg: svc('staff').bg,
     sources: sourcesFor('staff'),
     aspect: 3 / 2,
@@ -109,7 +93,8 @@ export const services: Service[] = [
     line: 'Hands-on training that makes your team confident with the tools they use every day.',
     scope: null,
     grade: { color: '#fff1d6', blend: 'screen', opacity: 0.16 },
-    visual: 'media',
+    // A real training loop or photo sequence only: until then, no side visual.
+    visual: svc('training').loop.length || svc('training').seq.length ? 'media' : 'none',
     bg: svc('training').bg,
     sources: sourcesFor('training'),
     aspect: 3 / 2,
