@@ -62,6 +62,8 @@ export interface RegisterOptions {
 export const stageParams = {
   exposure: 1,
   dprDesktopMax: 1.5,
+  /** Render resolution when WebGL runs on the CPU (no GPU acceleration). */
+  dprSoftware: 0.5,
   warmup: 0.25,
 }
 
@@ -111,6 +113,7 @@ function deviceFlags() {
 
 function computeDpr() {
   const { isMobile, isLowPower } = deviceFlags()
+  if (useDevice().isSoftwareGl.value) return stageParams.dprSoftware
   return isMobile || isLowPower ? 1 : Math.min(window.devicePixelRatio || 1, stageParams.dprDesktopMax)
 }
 
@@ -427,19 +430,65 @@ declare global {
 
 /* ─────────────────────────── Component-facing API ─────────────────────────── */
 
+export interface LazySceneOptions {
+  /** Load and initialise at mount (the hero). Otherwise only once the section is near. */
+  eager?: boolean
+  /** "Near": the section within this many viewport heights of the screen (either side). */
+  nearVh?: number
+}
+
 /**
  * Register a scene for the lifetime of the calling component.
  * `section` is the DOM element whose position in the viewport activates the scene.
+ * `factory` may be async — `() => import('~/utils/x/scene').then((m) => m.createX())` keeps the scene's
+ * code (and three.js) out of the page's initial bundle. Unless `eager`, the factory runs (and the
+ * scene's GPU work — init, shader warm-up — starts) only when the section comes near, so a page load
+ * pays for the first screen only.
  */
-export function useStageScene(factory: () => StageScene, section: Ref<HTMLElement | null>, options?: RegisterOptions) {
+export function useStageScene(
+  factory: () => StageScene | Promise<StageScene>,
+  section: Ref<HTMLElement | null>,
+  options: RegisterOptions & LazySceneOptions = {},
+) {
   let id: string | null = null
+  let near: ScrollTrigger | null = null
+  let started = false
+  let removed = false
+
+  const load = async () => {
+    if (started || removed) return
+    started = true
+    near?.kill()
+    near = null
+    try {
+      const scene = await factory()
+      if (removed || !section.value) return
+      id = scene.id
+      registerScene(scene, section.value, options)
+    } catch (err) {
+      console.error('[stage] scene failed to load', err)
+    }
+  }
+
   onMounted(() => {
     if (!section.value) return
-    const scene = factory()
-    id = scene.id
-    registerScene(scene, section.value, options)
+    if (options.eager) {
+      void load()
+      return
+    }
+    const margin = () => window.innerHeight * (options.nearVh ?? 1.5)
+    near = ScrollTrigger.create({
+      trigger: section.value,
+      start: () => `top bottom+=${margin()}`,
+      end: () => `bottom top-=${margin()}`,
+      onToggle: (self) => self.isActive && void load(),
+    })
+    // Already near at mount (a reload mid-page, a ?to= landing): start now.
+    if (near.isActive) void load()
   })
   onBeforeUnmount(() => {
+    removed = true
+    near?.kill()
     if (id) unregisterScene(id)
   })
 }

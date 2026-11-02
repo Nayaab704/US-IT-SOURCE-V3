@@ -2,7 +2,8 @@
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { flexParams } from '~/utils/flexframe/params'
-import { createFlexFrameScene, FLEX_MEDIA, type FlexFrameScene } from '~/utils/flexframe/scene'
+import type { FlexFrameScene } from '~/utils/flexframe/scene'
+import { FLEX_MEDIA } from '~/utils/flexframe/params'
 import { insideParams } from '~/utils/inside/params'
 import { addWorldOverride } from '~/composables/useWorld'
 
@@ -138,12 +139,13 @@ function wordFrom(el: HTMLElement | null, leftFraction: number) {
   }
 }
 
+// The pin never waits for the WebGL scene (it loads when the section comes near): the page layout
+// below is the same from the first frame, and the scene picks the current state up when it arrives.
 function buildTimeline() {
-  if (!scene) return
   const sec = section.value
   pinTrigger = null
   if (reducedMotion.value) {
-    scene.setStatic(true)
+    scene?.setStatic(true)
     Object.assign(state, { p: 0, d: 0, q: 0 })
     apply()
     gsap.set(copy.value, { autoAlpha: 1, y: 0 })
@@ -151,7 +153,7 @@ function buildTimeline() {
     stageFront(sec, 1.4)
     return
   }
-  scene.setStatic(false)
+  scene?.setStatic(false)
   Object.assign(state, { p: 0, d: 0, q: 0 })
   apply()
   const pin = isMobile.value ? T.pinMobile : T.pin
@@ -231,24 +233,20 @@ function rebuild() {
 
 // Per frame: the fixed layers follow the section (before / after the pin).
 function onTick() {
-  if (!section.value || !scene) return
+  if (!section.value) return
   const y = `translate3d(0, ${sectionTop().toFixed(1)}px, 0)`
-  if (wordsLayer.value) wordsLayer.value.style.transform = y
-  if (insideLayer.value) insideLayer.value.style.transform = y
+  for (const layer of [wordsLayer.value, insideLayer.value]) {
+    if (!layer) continue
+    layer.style.transform = y
+    // Hidden until placed here (CSS): the server's first frame would otherwise show them on screen.
+    if (layer.style.visibility !== 'visible') layer.style.visibility = 'visible'
+  }
 }
 
-// Order matters: the scene AND the pin must exist before the stage and the world sections create
-// their triggers (their onMounted hooks run after this one).
+// Order matters: the pin must exist before the stage and the world sections create their triggers
+// (their onMounted hooks run after this one).
 onMounted(() => {
   mounted.value = true
-  scene = createFlexFrameScene({
-    id: 'flexframe',
-    section: () => section.value,
-    card: () => card.value,
-    onTimingChange: rebuild,
-    sectionTop,
-    staticFrame,
-  })
   const start = () => {
     rebuild()
     ScrollTrigger.addEventListener('refresh', onRefresh)
@@ -258,7 +256,27 @@ onMounted(() => {
   if (prefersReduced.value) nextTick(start)
   else start()
 })
-useStageScene(() => scene!, root, { world: 'day' })
+// Loaded (and its GPU work started) only when the section comes near; it then takes over the
+// current scroll state.
+useStageScene(
+  () =>
+    import('~/utils/flexframe/scene').then(({ createFlexFrameScene }) => {
+      scene = createFlexFrameScene({
+        id: 'flexframe',
+        section: () => section.value,
+        card: () => card.value,
+        onTimingChange: rebuild,
+        sectionTop,
+        staticFrame,
+      })
+      scene.setStatic(reducedMotion.value)
+      scene.remeasure()
+      apply()
+      return scene
+    }),
+  root,
+  { world: 'day' },
+)
 // The section is a day section, but the INSIDE world is dark: DOM ink (the nav) turns light while it
 // fills the screen; rendering stays "day" so this scene keeps drawing.
 let removeOverride: (() => void) | null = null
@@ -465,6 +483,8 @@ onBeforeUnmount(() => {
   z-index: 2; /* above the stage canvas */
   overflow: hidden;
   pointer-events: none;
+  /* Fixed layers that follow the section: shown once the script has placed them (onTick). */
+  visibility: hidden;
 }
 
 .ff-words {

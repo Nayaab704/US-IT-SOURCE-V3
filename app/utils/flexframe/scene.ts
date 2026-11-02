@@ -24,25 +24,11 @@ import type { FolderApi } from 'tweakpane'
 import type { StageScene } from '~/composables/useStage'
 import { RibbonWaves, type WaveStroke } from '~/utils/ribbon/waves'
 import { loadShader } from '~/utils/shaders'
-import { flexParams as params, type FlexParams } from './params'
+import { FLEX_MEDIA, flexParams as params, type FlexParams } from './params'
 import { buildLinePath, snakeArc, type LinePath, type PxRect } from './path'
 import { InsideWorld } from '~/utils/inside/world'
 import { insideParams } from '~/utils/inside/params'
 import { buildInsidePane } from '~/utils/inside/pane'
-
-/**
- * Footage (the small card): "An Auto Mechanic Working" (Pexels 7568439),
- * https://www.pexels.com/video/an-auto-mechanic-working-7568439/ — Pexels License (free for
- * commercial use, no attribution required). Hands at a workbench; no faces, no logos.
- * Re-encoded: 8 s seamless loop (last 0.8 s cross-faded into the start), 1280 wide, muted
- * (H.264 1.5 MB · VP9 1.9 MB). PLACEHOLDER until the owner supplies real footage.
- */
-export const FLEX_MEDIA = {
-  mp4: '/video/ops.mp4',
-  webm: '/video/ops.webm',
-  poster: '/video/ops-poster.jpg',
-  aspect: 1280 / 674,
-}
 
 type Rect = { x: number; y: number; w: number; h: number }
 
@@ -128,10 +114,8 @@ export function createFlexFrameScene(options: {
   // critical path — then warms the hardware video decoder (its first decode can block the GPU process
   // for a second or more, which mid-scroll would freeze the page). Still long before the card shows.
   const loadVideo = () => {
-    for (const [src, type] of [
-      [FLEX_MEDIA.webm, 'video/webm'],
-      [FLEX_MEDIA.mp4, 'video/mp4'],
-    ] as const) {
+    for (const src of FLEX_MEDIA.sources) {
+      const type = /\.webm(\?|$)/i.test(src) ? 'video/webm' : 'video/mp4'
       const s = document.createElement('source')
       s.src = src
       s.type = type
@@ -554,7 +538,7 @@ export function createFlexFrameScene(options: {
       vw = ctx.width
       vh = ctx.height
       dpr = Math.min(1.5, ctx.dpr)
-      isMobile = ctx.isMobile
+      isMobile = ctx.isMobile || ctx.isLowPower
       ripple.clear(ctx.renderer)
       planeUniforms.tRipple.value = ripple.texture
       worldTarget.setSize(Math.round(vw * dpr), Math.round(vh * dpr))
@@ -679,7 +663,10 @@ export function createFlexFrameScene(options: {
       stillDirty = true
     },
 
-    setActive() {},
+    setActive(active) {
+      // update() (which plays / pauses the footage) stops with the scene: don't leave it decoding off screen.
+      if (!active && !video.paused) video.pause()
+    },
 
     dispose() {
       video.pause()

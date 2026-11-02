@@ -2,7 +2,7 @@
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { contactLine, contactParams, ctaEmail, ctaHref, mediaFor, people, rectsDesktop, rectsMobile } from '~/data/contact'
-import { createLeavesScene } from '~/utils/leaves/scene'
+import type { MediaImg } from '#build/media-manifest.mjs'
 import { HEADLINE, HEADLINE_TEXT, layoutHandwriting } from './handwriting'
 
 /**
@@ -34,6 +34,7 @@ const isMobile = computed(() => mounted.value && device.isMobile.value)
 const mode = computed(() => (isMobile.value ? 'mobile' : 'desktop'))
 const rects = computed(() => (isMobile.value ? rectsMobile : rectsDesktop))
 const media = computed(() => mediaFor(rects.value))
+const imgOf = (i: number) => (media.value[i] as { img: MediaImg }).img
 const pointer = usePointer()
 
 // The headline box follows the lettering's own proportions.
@@ -198,7 +199,12 @@ onMounted(() => {
   )
   if (root.value) videoIO.observe(root.value)
 })
-useStageScene(() => createLeavesScene({ id: 'contact-leaves', section: () => root.value }), root, { world: 'day' })
+// Loaded (and its GPU work started) only when the section comes near.
+useStageScene(
+  () => import('~/utils/leaves/scene').then(({ createLeavesScene }) => createLeavesScene({ id: 'contact-leaves', section: () => root.value })),
+  root,
+  { world: 'day' },
+)
 watch([reducedMotion, isMobile], () => nextTick(rebuild))
 onBeforeUnmount(() => {
   gsap.ticker.remove(onTick)
@@ -225,17 +231,20 @@ onBeforeUnmount(() => {
           aria-hidden="true"
         >
           <div class="ct-media">
-            <img v-if="media[i]?.type === 'image'" :src="(media[i] as { src: string }).src" alt="" loading="lazy" decoding="async" />
+            <picture v-if="media[i]?.type === 'image'">
+              <source v-if="imgOf(i).avif" :srcset="imgOf(i).avif" type="image/avif" :sizes="`${r.w}vw`" />
+              <img :src="imgOf(i).src" :srcset="imgOf(i).srcset" :sizes="`${r.w}vw`" alt="" loading="lazy" decoding="async" />
+            </picture>
             <video
               v-else-if="media[i]?.type === 'video'"
               :ref="setVideo"
-              :poster="(media[i] as { poster: string | null }).poster ?? undefined"
+              :poster="(media[i] as { poster: MediaImg | null }).poster?.src"
               muted
               loop
               playsinline
               preload="none"
             >
-              <source v-for="src in (media[i] as { sources: string[] }).sources" :key="src" :src="src" :type="src.endsWith('webm') ? 'video/webm' : 'video/mp4'" />
+              <source v-for="src in (media[i] as { sources: string[] }).sources" :key="src" :src="src" :type="/\.webm(\?|$)/i.test(src) ? 'video/webm' : 'video/mp4'" />
             </video>
             <span v-else class="ct-ph">[{{ r.kind }}]</span>
           </div>

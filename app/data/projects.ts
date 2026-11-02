@@ -3,19 +3,21 @@ import media from '#build/media-manifest.mjs'
 /**
  * The projects: one entry per project drives its tab in "View our projects" AND its case-study page
  * (/work/<slug>). To add a project (full guide: docs/ADDING_A_PROJECT.md):
- *   1. screenshots in public/media/projects/<slug>/ — 01.png, 02.png … (NN-mobile.png = phone frame;
- *      portrait images get it automatically),
+ *   1. screenshots in public/media/projects/<slug>/ — 01.png, 02.jpg, 03.webp … any format (NN-mobile.* =
+ *      phone frame; portrait images get it automatically). The build resizes and hashes them (/_m/…),
  *   2. its page text in docs/case-studies/<slug>.md,
  *   3. one entry below.
  */
 export interface ProjectScreen {
-  /** Image URL, or null for a neutral labelled placeholder frame. */
+  /** Image URL (largest variant), or null for a neutral labelled placeholder frame. */
   src: string | null
+  /** Responsive candidates ("url 800w, url 1600w") for srcset. */
+  srcset?: string
   /** Phone frame (else desktop). For images this is refined from the real aspect on load. */
   mobile: boolean
   /** Screen-reader / placeholder label. */
   label: string
-  /** Pixel width / height read from the file at build time (lets pages reserve the space). */
+  /** Pixel width / height of the largest variant (lets pages reserve the space). */
   width?: number
   height?: number
 }
@@ -67,15 +69,17 @@ const entries: ProjectEntry[] = [
 const two = (n: number) => String(n).padStart(2, '0')
 
 function screensFor(e: ProjectEntry): ProjectScreen[] {
-  const files = media.projects[e.media ?? e.slug] ?? []
-  if (files.length) {
+  const shots = media.projects[e.media ?? e.slug] ?? []
+  if (shots.length) {
     // Labelled by the file's own number (01.png and 01-mobile.png are the desktop and phone views of screen 01).
-    return files.map((src, i) => {
-      const mobile = /-mobile\.\w+$/i.test(src)
-      const num = /\/(\d{2})(?:-mobile)?\.\w+$/.exec(src)?.[1] ?? two(i + 1)
-      const [width, height] = media.sizes[src] ?? []
-      return { src, mobile, label: `${e.name} ${mobile ? 'phone ' : ''}screen ${num}`, width, height }
-    })
+    return shots.map(({ img, mobile, num }) => ({
+      src: img.src,
+      srcset: img.srcset,
+      mobile,
+      label: `${e.name} ${mobile ? 'phone ' : ''}screen ${num}`,
+      width: img.width,
+      height: img.height,
+    }))
   }
   // Placeholders: desktop frames with the phone frames spread among them.
   const ph = e.placeholders ?? { desktop: 4, mobile: 0 }

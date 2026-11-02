@@ -63,7 +63,7 @@ function toContact() {
         <li v-for="c in project.chips" :key="c">{{ c }}</li>
       </ul>
       <figure v-if="heroShot" class="cs-shot">
-        <img :src="heroShot.src!" :alt="heroShot.label" :width="heroShot.width" :height="heroShot.height" decoding="async" fetchpriority="high" />
+        <img :src="heroShot.src!" :srcset="heroShot.srcset" sizes="(max-width: 767px) 92vw, min(1200px, 88vw)" :alt="heroShot.label" :width="heroShot.width" :height="heroShot.height" decoding="async" fetchpriority="high" />
       </figure>
     </header>
 
@@ -136,7 +136,7 @@ function toContact() {
           :aria-label="`Open ${s.label}`"
           @click="openShot(i, $event)"
         >
-          <img :src="s.src!" alt="" :width="s.width" :height="s.height" loading="lazy" decoding="async" />
+          <img :src="s.src!" :srcset="s.srcset" :sizes="s.mobile ? '(max-width: 767px) 46vw, 300px' : '(max-width: 767px) 92vw, 44vw'" alt="" :width="s.width" :height="s.height" loading="lazy" decoding="async" />
         </button>
       </div>
     </section>

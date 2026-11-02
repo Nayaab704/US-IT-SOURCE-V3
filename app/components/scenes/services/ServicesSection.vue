@@ -318,9 +318,9 @@ const gradeStyle = (s: (typeof services)[number]) => ({ background: s.grade.colo
 
       <div v-for="(s, k) in services" :key="s.slug" :ref="setEl(layers, k)" class="sv-layer" :style="{ zIndex: k + 1 }" aria-hidden="true">
         <div :ref="setEl(bgs, k)" class="sv-bg" :style="bgStyle(s.aspect)">
-          <picture v-if="s.bg.length">
-            <source v-for="src in s.sources" :key="src.srcset" :srcset="src.srcset" :type="src.type" sizes="100vw" />
-            <img :src="s.bg[s.bg.length - 1]" alt="" loading="lazy" decoding="async" />
+          <picture v-if="s.bg">
+            <source v-if="s.bg.avif" :srcset="s.bg.avif" type="image/avif" sizes="100vw" />
+            <img :src="s.bg.src" :srcset="s.bg.srcset" sizes="100vw" alt="" loading="lazy" decoding="async" />
           </picture>
           <div v-else class="sv-ph-bg grain" />
           <div class="sv-grade" :style="gradeStyle(s)" />
@@ -373,9 +373,9 @@ const gradeStyle = (s: (typeof services)[number]) => ({ background: s.grade.colo
       <article v-for="s in services" :key="s.slug" class="svm-card">
         <div class="svm-photo" aria-hidden="true">
           <div class="sv-bg" :style="bgStyle(s.aspect)">
-            <picture v-if="s.bg.length">
-              <source v-for="src in s.sources" :key="src.srcset" :srcset="src.srcset" :type="src.type" sizes="100vw" />
-              <img :src="s.bg[s.bg.length - 1]" alt="" loading="lazy" decoding="async" />
+            <picture v-if="s.bg">
+              <source v-if="s.bg.avif" :srcset="s.bg.avif" type="image/avif" sizes="100vw" />
+              <img :src="s.bg.src" :srcset="s.bg.srcset" sizes="100vw" alt="" loading="lazy" decoding="async" />
             </picture>
             <div v-else class="sv-ph-bg grain" />
             <div class="sv-grade" :style="gradeStyle(s)" />

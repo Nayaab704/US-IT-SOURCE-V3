@@ -2,7 +2,7 @@
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { projects, projectsParams, type ProjectScreen } from '~/data/projects'
-import { createDayScene, type DayScene } from '~/utils/day/scene'
+import type { DayScene } from '~/utils/day/scene'
 
 /**
  * "View our projects" (F1), directly after Step Inside. The wrapper overlaps the last viewport of
@@ -235,12 +235,14 @@ onMounted(() => {
   else start()
   void buildPane()
 })
+// Loaded (and its GPU work started) only when the section comes near.
 useStageScene(
-  () => {
-    day = createDayScene({ id: 'projects-day', preset: 'problems' })
-    applyLight()
-    return day
-  },
+  () =>
+    import('~/utils/day/scene').then(({ createDayScene }) => {
+      day = createDayScene({ id: 'projects-day', preset: 'problems' })
+      applyLight()
+      return day
+    }),
   root,
   { world: 'day', order: -1 },
 )

@@ -1,3 +1,21 @@
+import media from '#build/media-manifest.mjs'
+
+/**
+ * Footage (the small card): "An Auto Mechanic Working" (Pexels 7568439),
+ * https://www.pexels.com/video/an-auto-mechanic-working-7568439/ — Pexels License (free for
+ * commercial use, no attribution required). Hands at a workbench; no faces, no logos.
+ * Re-encoded: 8 s seamless loop (last 0.8 s cross-faded into the start), 1280 wide, muted
+ * (H.264 1.5 MB · VP9 1.9 MB). PLACEHOLDER until the owner supplies real footage: replace
+ * public/video/ops.mp4 / ops.webm / ops-poster.jpg (URLs are content-hashed by the media manifest).
+ * Lives here, not in scene.ts, so the page can show the poster before the WebGL scene loads.
+ */
+export const FLEX_MEDIA = {
+  /** WebM first, then MP4 (with ?v=<hash>). */
+  sources: media.flex.sources,
+  poster: media.flex.poster?.src ?? '',
+  aspect: 1280 / 674,
+}
+
 /**
  * "The line & the flexible frame" (phase S1) → "Inside" (S3): the day section after the hero.
  * Positions are fractions of the (pinned, viewport-sized) section unless marked `card`, in which

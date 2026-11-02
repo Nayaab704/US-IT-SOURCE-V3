@@ -21,11 +21,20 @@ public/media/projects/project-assembly-track/
   04-mobile.png      ← "-mobile" shows it in a phone frame (portrait images get one anyway)
 ```
 
-- Desktop screens: 2880×1800 PNG (or WebP), ideally under 400 KB each.
-- Phone screens: 1170×2532 PNG (or WebP).
+- **Any format, any size**: PNG, JPG, WebP or AVIF — even a PNG saved with a `.webp` name. The build
+  reads the real format, resizes (desktop 1600 px, phone 900 px wide) and converts to WebP with a
+  content hash in the name, so a replaced screenshot always shows up. Your files are never changed.
+  They are deployed too, so keep each under about 3 MB (a 2880×1800 or 1170×2532 capture is ideal).
 - **Only real screens, with demo or redacted data** — no client names, prices, people or number plates
-  unless the client has agreed.
-- `01.png` is the big image at the top of the case-study page.
+  unless the client has agreed. If a screen shows something private, either capture it again or list
+  the area in `public/media/redactions.json` (it is blocked out in the published copy only):
+  ```json
+  "projects/project-assembly-track/02.png": [
+    { "x": 0.70, "y": 0.02, "w": 0.20, "h": 0.05, "note": "user name, top right" }
+  ]
+  ```
+  `x, y, w, h` are fractions of the image (0 = left/top, 1 = right/bottom).
+- `01.*` is the big image at the top of the case-study page.
 
 ## 2. Write the case-study text
 

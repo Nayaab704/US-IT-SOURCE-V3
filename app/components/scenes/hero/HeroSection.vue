@@ -20,7 +20,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type { OpeningMode, OpeningWorld, RevealKind } from '~/components/ui/Opening.client.vue'
 import { OPENING_ITEMS } from '~/utils/opening'
 import { addWorldOverride } from '~/composables/useWorld'
-import { createRibbonScene, type RibbonScene } from '~/utils/ribbon/scene'
+import type { RibbonScene } from '~/utils/ribbon/scene'
 
 /**
  * Home hero (ART_DIRECTION v2 §4.2): the opening (first visit), the inflated-latex ribbon and the hero
@@ -184,13 +184,16 @@ onMounted(() => {
   gsap.ticker.add(onTick)
   removeOverride = addWorldOverride(worldProvider)
 })
+// Loaded at once (the opening waits for it), but as its own chunk: three.js and the ribbon stay out of
+// the page's initial bundle, so the server-rendered first frame paints without waiting for them.
 useStageScene(
-  () => {
-    scene = createRibbonScene({ id: 'hero-ribbon' })
-    return scene
-  },
+  () =>
+    import('~/utils/ribbon/scene').then(({ createRibbonScene }) => {
+      scene = createRibbonScene({ id: 'hero-ribbon' })
+      return scene
+    }),
   root,
-  { world: 'night' },
+  { world: 'night', eager: true },
 )
 watch([reducedMotion, isMobile], rebuild)
 onBeforeUnmount(() => {

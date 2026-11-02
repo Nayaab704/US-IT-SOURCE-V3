@@ -174,7 +174,7 @@ onBeforeUnmount(() => {
   <div v-show="visible" class="mn" :class="{ 'is-mobile': isMobile }">
     <!-- The card: section stills over the live page (desktop). -->
     <div ref="card" class="mn-card" aria-hidden="true">
-      <img v-for="l in MENU_LINKS" :key="l.key" :src="l.still" alt="" class="mn-still" :class="{ on: still === l.key }" loading="lazy" decoding="async" />
+      <img v-for="l in MENU_LINKS.filter((x) => x.still)" :key="l.key" :src="l.still" alt="" class="mn-still" :class="{ on: still === l.key }" loading="lazy" decoding="async" />
     </div>
     <div id="site-menu" ref="layer" class="mn-layer" role="dialog" aria-modal="true" aria-label="Menu">
       <div ref="content" class="mn-content">

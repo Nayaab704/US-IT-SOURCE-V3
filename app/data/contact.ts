@@ -1,4 +1,4 @@
-import media from '#build/media-manifest.mjs'
+import media, { type MediaImg } from '#build/media-manifest.mjs'
 
 /**
  * "let's work together" + contact (F3). People and emails are owner-supplied (names / roles inferred
@@ -63,7 +63,7 @@ export const rectsMobile: Rect[] = [
  * Media for each rectangle: videos go to 'video' slots first, photos to the rest (in file order);
  * whatever is left over stays a labelled placeholder.
  */
-export type RectMedia = { type: 'image'; src: string } | { type: 'video'; sources: string[]; poster: string | null }
+export type RectMedia = { type: 'image'; img: MediaImg } | { type: 'video'; sources: string[]; poster: MediaImg | null }
 
 export function mediaFor(rects: Rect[]): (RectMedia | null)[] {
   const images = [...media.contact.images]
@@ -71,7 +71,7 @@ export function mediaFor(rects: Rect[]): (RectMedia | null)[] {
   return rects.map((r): RectMedia | null => {
     if (r.kind === 'video' && videos.length) return { type: 'video', ...videos.shift()! }
     // A photo slot (or a video slot with no loop left) takes the next photo.
-    if (images.length) return { type: 'image', src: images.shift()! }
+    if (images.length) return { type: 'image', img: images.shift()! }
     return null
   })
 }

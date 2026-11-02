@@ -1,3 +1,4 @@
+import media from '#build/media-manifest.mjs'
 import { contactParams } from '~/data/contact'
 import { projectsParams } from '~/data/projects'
 import { servicesParams } from '~/data/services'
@@ -9,11 +10,13 @@ import { servicesParams } from '~/data/services'
  */
 export type MenuKey = 'home' | 'projects' | 'services' | 'contact'
 
+// Stills: public/media/menu/<key>.* (hashed at build); a missing one simply isn't shown.
+const still = (key: MenuKey) => media.menu[key]?.src ?? ''
 export const MENU_LINKS: { key: MenuKey; label: string; still: string }[] = [
-  { key: 'home', label: 'Home', still: '/media/menu/home.webp' },
-  { key: 'projects', label: 'Projects', still: '/media/menu/projects.webp' },
-  { key: 'services', label: 'Services', still: '/media/menu/services.webp' },
-  { key: 'contact', label: 'Contact', still: '/media/menu/contact.webp' },
+  { key: 'home', label: 'Home', still: still('home') },
+  { key: 'projects', label: 'Projects', still: still('projects') },
+  { key: 'services', label: 'Services', still: still('services') },
+  { key: 'contact', label: 'Contact', still: still('contact') },
 ]
 
 /** Top of a pinned section's spacer (document px), or of the element itself. */

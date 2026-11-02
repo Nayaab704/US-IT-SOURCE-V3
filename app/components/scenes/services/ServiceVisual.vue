@@ -64,7 +64,7 @@ const cardStyle = (i: number) => {
     <div v-if="service.visual === 'phone' || service.visual === 'desktop'" class="sv-device">
       <div class="sv-screen">
         <div v-for="(s, i) in screens" :key="i" class="sv-shot" :class="{ on: i === shown }">
-          <img v-if="s.src" :src="s.src" alt="" loading="lazy" decoding="async" />
+          <img v-if="s.src" :src="s.src" :srcset="s.srcset" :sizes="service.visual === 'phone' ? '(max-width: 767px) 22vh, 260px' : '(max-width: 767px) 100vw, 34vw'" alt="" loading="lazy" decoding="async" />
           <span v-else class="sv-ph">[{{ s.label }}]</span>
         </div>
       </div>
@@ -73,7 +73,10 @@ const cardStyle = (i: number) => {
     <!-- Staff: three portrait cards that fan out. -->
     <div v-else-if="service.visual === 'cards'" class="sv-cards">
       <div v-for="i in 3" :key="i" class="sv-card" :style="cardStyle(i - 1)">
-        <img v-if="teamPortraits[i - 1]" :src="teamPortraits[i - 1]" alt="" loading="lazy" decoding="async" />
+        <picture v-if="teamPortraits[i - 1]">
+          <source v-if="teamPortraits[i - 1]!.avif" :srcset="teamPortraits[i - 1]!.avif" type="image/avif" sizes="260px" />
+          <img :src="teamPortraits[i - 1]!.src" :srcset="teamPortraits[i - 1]!.srcset" sizes="260px" alt="" loading="lazy" decoding="async" />
+        </picture>
         <span v-else class="sv-ph">[Team portrait]</span>
       </div>
     </div>
@@ -81,11 +84,14 @@ const cardStyle = (i: number) => {
     <!-- Training: a muted loop, else a slow photo sequence, else a labelled frame. -->
     <div v-else-if="service.visual === 'media'" class="sv-media">
       <video v-if="loop.length" ref="video" muted loop playsinline preload="metadata">
-        <source v-for="src in loop" :key="src" :src="src" :type="src.endsWith('webm') ? 'video/webm' : 'video/mp4'" />
+        <source v-for="src in loop" :key="src" :src="src" :type="/\.webm(\?|$)/i.test(src) ? 'video/webm' : 'video/mp4'" />
       </video>
       <template v-else-if="seq.length">
-        <div v-for="(src, i) in seq" :key="src" class="sv-shot" :class="{ on: i === shown }">
-          <img :src="src" alt="" loading="lazy" decoding="async" />
+        <div v-for="(im, i) in seq" :key="im.src" class="sv-shot" :class="{ on: i === shown }">
+          <picture>
+            <source v-if="im.avif" :srcset="im.avif" type="image/avif" sizes="(max-width: 767px) 100vw, 34vw" />
+            <img :src="im.src" :srcset="im.srcset" sizes="(max-width: 767px) 100vw, 34vw" alt="" loading="lazy" decoding="async" />
+          </picture>
         </div>
       </template>
       <span v-else class="sv-ph">[Training video or photo sequence]</span>

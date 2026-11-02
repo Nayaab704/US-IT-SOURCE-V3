@@ -58,7 +58,7 @@ defineExpose({ open })
   <dialog ref="dialog" class="lb" aria-label="Project screen" @close="onClose" @keydown="onKey" @click="onBackdrop">
     <div v-if="current" class="lb-inner">
       <figure class="lb-figure" :class="{ 'is-phone': isPhone }">
-        <img v-if="current.src" :key="current.src" :src="current.src" :alt="current.label" @load="onImg" />
+        <img v-if="current.src" :key="current.src" :src="current.src" :srcset="current.srcset" :sizes="current.mobile ? '(max-width: 767px) 80vw, 420px' : '(max-width: 767px) 100vw, 86vw'" :alt="current.label" @load="onImg" />
         <div v-else class="lb-ph">[{{ current.label }}]</div>
       </figure>
       <p class="sr-only" aria-live="polite">{{ current.label }}, {{ index + 1 }} of {{ screens.length }}</p>

@@ -161,7 +161,7 @@ const frameStyle = (s: ProjectScreen) => ({ aspectRatio: String(aspectOf(s)) })
                   @pointerleave="setHover(false)"
                 >
                   <span class="ps-face">
-                    <img v-if="it.s.src" :src="it.s.src" alt="" loading="lazy" decoding="async" draggable="false" @load="onLoad($event, it.s)" />
+                    <img v-if="it.s.src" :src="it.s.src" :srcset="it.s.srcset" :sizes="it.s.mobile ? '(max-width: 767px) 14vh, 125px' : '(max-width: 767px) 48vh, 432px'" :width="it.s.width" :height="it.s.height" alt="" loading="lazy" decoding="async" draggable="false" @load="onLoad($event, it.s)" />
                     <span v-else class="ps-ph">[{{ it.s.label }}]</span>
                   </span>
                 </button>
@@ -183,7 +183,7 @@ const frameStyle = (s: ProjectScreen) => ({ aspectRatio: String(aspectOf(s)) })
               @click="open(i, $event)"
             >
               <span class="ps-face">
-                <img v-if="s.src" :src="s.src" alt="" loading="lazy" decoding="async" draggable="false" @load="onLoad($event, s)" />
+                <img v-if="s.src" :src="s.src" :srcset="s.srcset" :sizes="s.mobile ? '(max-width: 767px) 14vh, 125px' : '(max-width: 767px) 48vh, 432px'" :width="s.width" :height="s.height" alt="" loading="lazy" decoding="async" draggable="false" @load="onLoad($event, s)" />
                 <span v-else class="ps-ph">[{{ s.label }}]</span>
               </span>
             </button>
