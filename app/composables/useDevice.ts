@@ -2,6 +2,7 @@ const MOBILE_MAX_WIDTH = 768
 
 const isMobile = ref(false)
 const isLowPower = ref(false)
+const isSoftwareGl = ref(false)
 let initialised = false
 
 interface NavigatorHints {
@@ -18,10 +19,25 @@ function detectLowPower(): boolean {
   return cores <= 4 || memory <= 4 || nav.connection?.saveData === true
 }
 
+/** WebGL renderer names of CPU (software) rasterisers: no GPU acceleration at all. */
+const SOFTWARE_GL = /swiftshader|llvmpipe|softpipe|basic render driver|software/i
+
+/**
+ * Called by the stage once its WebGL context exists. A browser without GPU acceleration draws every
+ * pixel on the CPU: such a device gets the low-power path and a reduced render resolution (see
+ * useStage computeDpr) — a soft but fluid picture instead of one frame a second.
+ */
+export function noteWebglRenderer(name: string) {
+  if (!SOFTWARE_GL.test(name)) return
+  isSoftwareGl.value = true
+  isLowPower.value = true
+}
+
 /**
  * isMobile: viewport < 768px OR a coarse (touch) primary pointer.
- * isLowPower: heuristic, see detectLowPower().
- * Both are `false` during SSR.
+ * isLowPower: heuristic, see detectLowPower(), or a software WebGL renderer (noteWebglRenderer).
+ * isSoftwareGl: WebGL runs on the CPU (no GPU acceleration).
+ * All are `false` during SSR.
  */
 export function useDevice() {
   if (import.meta.client && !initialised) {
@@ -38,5 +54,6 @@ export function useDevice() {
   return {
     isMobile: readonly(isMobile),
     isLowPower: readonly(isLowPower),
+    isSoftwareGl: readonly(isSoftwareGl),
   }
 }

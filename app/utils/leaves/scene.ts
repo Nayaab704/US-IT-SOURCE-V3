@@ -106,7 +106,7 @@ export function createLeavesScene(options: { id?: string; section: () => HTMLEle
     init(ctx) {
       width = ctx.width
       height = ctx.height
-      isMobile = ctx.isMobile
+      isMobile = ctx.isMobile || ctx.isLowPower
       syncTarget()
       if (ctx.pane) buildPane(ctx.pane)
     },

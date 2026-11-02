@@ -533,20 +533,33 @@ export function createRibbonScene(options: { id?: string } = {}): RibbonScene {
     surfaceUniforms.uWobble.value.copy(wobble)
   }
 
-  const _void = new Color()
+  const _void = new Color('#020306') // --void, sRGB → linear (constant: parsed once)
+  // Colour strings are parsed (regex) and the environment key is built (JSON) only when they change:
+  // in production nothing changes them after the first bake, so a frame does neither.
+  let lastColor = ''
+  let lastSheen = ''
   function syncUniforms() {
     const M = params.material
-    material.color.set(M.color)
+    if (M.color !== lastColor) {
+      material.color.set(M.color)
+      lastColor = M.color
+    }
     material.roughness = M.roughness
     material.clearcoat = M.clearcoat
     material.clearcoatRoughness = M.clearcoatRoughness
     material.sheen = M.sheen
     // The reflection gain (envIntensity) exists to lift the Fresnel-weak clearcoat; the sheen lobe is
     // not Fresnel-limited, so it is compensated back to the gain it would have at 1.
-    material.sheenColor.set(M.sheenColor).multiplyScalar(M.sheenGain / Math.max(M.envIntensity, 1e-3))
+    const sheenKey = `${M.sheenColor}|${M.sheenGain}|${M.envIntensity}`
+    if (sheenKey !== lastSheen) {
+      material.sheenColor.set(M.sheenColor).multiplyScalar(M.sheenGain / Math.max(M.envIntensity, 1e-3))
+      lastSheen = sheenKey
+    }
     material.sheenRoughness = M.sheenRoughness
     scene.environmentIntensity = M.envIntensity
-    if (env) scene.environment = env.update(params.softboxes, params.floor)
+    // Dev: the panel can move the softboxes (re-bake on change). Production: once — the shipped bake
+    // when it matches the params, else a live bake after its shaders compiled in parallel (env.load).
+    if (env?.prepared && (import.meta.dev || env.bakes === 0)) scene.environment = env.update(params.softboxes, params.floor)
 
     const S = surfaceUniforms
     const thickness = ribbon?.thickness ?? 0.5
@@ -570,7 +583,6 @@ export function createRibbonScene(options: { id?: string } = {}): RibbonScene {
     S.uGrain.value = P.grain
     S.uDither.value = P.dither ? 1 : 0
     const vu = voidMaterial.uniforms
-    _void.set('#020306') // --void, sRGB → linear
     ;(vu.uVoid!.value as Vector3).set(_void.r, _void.g, _void.b)
     vu.uVoidFalloff!.value = P.voidFalloff
     vu.uGrain!.value = P.grain
@@ -699,6 +711,7 @@ export function createRibbonScene(options: { id?: string } = {}): RibbonScene {
       height = ctx.height
       isMobile = ctx.isMobile || ctx.isLowPower
       env = new RibbonEnvironment(ctx.renderer)
+      void env.load(params.softboxes, params.floor)
       waves = isMobile ? new RibbonWaves(512, 64) : new RibbonWaves(1024, 128)
       surfaceUniforms.uWaveSize.value.set(waves.width, waves.height)
       waves.clear(ctx.renderer)
@@ -722,6 +735,16 @@ export function createRibbonScene(options: { id?: string } = {}): RibbonScene {
           wobble: wobble.length(),
           pointerSpeed: pointer.speed,
           onRibbon: hadHit,
+          /** Save the current environment as the file to ship (see utils/ribbon/envBake.ts). */
+          downloadEnv: async () => {
+            if (!env) return
+            const { name, blob } = await env.exportPng(params.softboxes, params.floor)
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(blob)
+            a.download = name
+            a.click()
+            return name
+          },
         })
       }
     },
@@ -771,7 +794,8 @@ export function createRibbonScene(options: { id?: string } = {}): RibbonScene {
       //    ~1–2 s blocking link on the first draw; nothing is drawn until they are ready (the opening's
       //    cover is up then). The latex compiles under the tone mapping it is drawn with.
       if (compileState !== 2) {
-        if (compileState === 0) {
+        // The latex's program depends on the environment map (its defines): compile once it exists.
+        if (compileState === 0 && (env?.bakes ?? 0) > 0) {
           compileState = 1
           const prevTm = r.toneMapping
           const jobs = [r.compileAsync(quadScene, quadCamera), r.compileAsync(maskScene, quadCamera), r.compileAsync(fadeScene, quadCamera)]

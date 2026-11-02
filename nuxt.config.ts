@@ -44,12 +44,28 @@ export default defineNuxtConfig({
       subsets: ['latin'],
     },
     families: [
-      { name: 'Geist', provider: 'google', weights: [300, 400, 500, 600] },
-      { name: 'Geist Mono', provider: 'google', weights: [400, 500] },
+      // Upright only: italics are set in the display serif. Faces are fetched only when text uses them;
+      // 600 serves <strong> (bold in the case studies).
+      { name: 'Geist', provider: 'google', weights: [300, 400, 500, 600], styles: ['normal'] },
+      { name: 'Geist Mono', provider: 'google', weights: [400, 500], styles: ['normal'] },
       // v2 display serif (ART_DIRECTION v2 §2): headlines, statements, project titles.
       // Preloaded: the opening's first (server-rendered) frame is set in it.
       { name: 'Newsreader', provider: 'google', weights: [300], styles: ['normal', 'italic'], preload: true },
     ],
+  },
+
+  // Pre-baked ribbon environments: the name changes with their inputs, so they never change in place.
+  routeRules: {
+    '/ribbon/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+  },
+
+  hooks: {
+    // No <link rel="prefetch"> for lazy chunks: by default every page would fetch three.js and the
+    // WebGL scenes (~0.7 MB) in the background — even a case study, which never uses them — competing
+    // with what is on screen. They still load on demand (the stage, each scene as its section nears).
+    'build:manifest': (manifest) => {
+      for (const chunk of Object.values(manifest)) chunk.prefetch = false
+    },
   },
 
   // Lab experiments are dev-only: in production the files never enter the build.

@@ -32,6 +32,10 @@ onMounted(async () => {
   renderer.info.autoReset = false
   // Shader error checks force synchronous GPU queries on every compile — dev only (three.js advice).
   renderer.debug.checkShaderErrors = isDev
+  // No GPU acceleration → low-power path at reduced resolution (before attach: it sizes the canvas).
+  const gl = renderer.getContext()
+  const info = gl.getExtension('WEBGL_debug_renderer_info')
+  noteWebglRenderer(String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ?? ''))
   attachRenderer(renderer)
   ownsRenderer = true
 
