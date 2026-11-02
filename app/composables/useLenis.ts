@@ -28,7 +28,12 @@ export function useLenis() {
     stop: () => instance.value?.stop(),
     /** Smooth when Lenis is active, instant native scroll otherwise (reduced motion). */
     scrollTo(target: ScrollTarget, options: LenisScrollToOptions = {}) {
-      if (instance.value) instance.value.scrollTo(target, options)
+      // Re-measure first: Lenis clamps to the page height it last saw, which lags (debounced) right
+      // after a route change or a pin rebuild — a jump would stop at the old page's bottom.
+      if (instance.value) {
+        instance.value.resize()
+        instance.value.scrollTo(target, options)
+      }
       else if (import.meta.client) nativeScrollTo(target, options.offset)
     },
   }

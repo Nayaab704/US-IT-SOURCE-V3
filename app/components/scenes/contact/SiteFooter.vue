@@ -1,6 +1,9 @@
 <script setup lang="ts">
-/** Site footer (F3): dark, small. Location and LinkedIn are placeholders until supplied. */
+/** Site footer (F3): dark, small. Location and LinkedIn appear once supplied (docs/PLACEHOLDERS.md). */
 import type { MenuKey } from '~/composables/useMenu'
+
+/** The company's LinkedIn page — empty until supplied; the link is hidden meanwhile. */
+const LINKEDIN_URL = ''
 
 const { scrollTo } = useLenis()
 const { goTo } = useMenu()
@@ -30,7 +33,7 @@ function go(e: MouseEvent, key: MenuKey) {
     </div>
     <div class="ft-row ft-small">
       <!-- Location: added once supplied (docs/PLACEHOLDERS.md). -->
-      <a href="#" aria-label="US IT Source on LinkedIn (link to be added)">LinkedIn</a>
+      <a v-if="LINKEDIN_URL" :href="LINKEDIN_URL" rel="noopener" target="_blank">LinkedIn</a>
       <span>© 2026 US IT Source</span>
       <a href="/" class="ft-top" @click.prevent="scrollTo(0, { duration: 1.6 })">Back to top ↑</a>
     </div>
