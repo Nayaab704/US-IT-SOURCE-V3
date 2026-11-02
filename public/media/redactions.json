@@ -1,0 +1,7 @@
+{
+  "_about": "Areas blocked out (solid ink) in the published copies of these images; the originals here are never changed. Key: path under public/media. x, y, w, h: fractions (0–1) of the image width/height. Listed in docs/PLACEHOLDERS.md.",
+  "projects/nester/02.png": [
+    { "x": 0.008, "y": 0.008, "w": 0.068, "h": 0.054, "note": "client name 'CT&S' in the page title" },
+    { "x": 0.034, "y": 0.248, "w": 0.115, "h": 0.04, "note": "sample job name 'ROGERDALE' in the Job Name field" }
+  ]
+}
