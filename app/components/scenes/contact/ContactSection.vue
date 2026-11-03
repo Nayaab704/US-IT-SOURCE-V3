@@ -132,32 +132,7 @@ function rebuild() {
 }
 
 // ── Copy an email ──
-const copied = ref<string | null>(null)
-const announce = ref('')
-let copiedTimer: ReturnType<typeof setTimeout> | null = null
-async function copy(email: string) {
-  let ok = false
-  try {
-    await navigator.clipboard.writeText(email)
-    ok = true
-  } catch {
-    // Fallback for browsers / contexts without the async clipboard.
-    const ta = document.createElement('textarea')
-    ta.value = email
-    ta.setAttribute('readonly', '')
-    ta.style.position = 'fixed'
-    ta.style.opacity = '0'
-    document.body.appendChild(ta)
-    ta.select()
-    ok = document.execCommand('copy')
-    ta.remove()
-  }
-  if (!ok) return
-  copied.value = email
-  announce.value = `${email} copied to the clipboard.`
-  if (copiedTimer) clearTimeout(copiedTimer)
-  copiedTimer = setTimeout(() => (copied.value = null), 2000)
-}
+const { copied, announce, copy } = useCopyEmail()
 
 // ── The mailto form (no backend: it opens the visitor's email app) ──
 const form = reactive({ name: '', company: '', email: '', message: '' })
@@ -212,7 +187,6 @@ onBeforeUnmount(() => {
   ctx?.revert()
   document.documentElement.classList.remove('stage-front', 'stage-multiply')
   paneFolder?.dispose()
-  if (copiedTimer) clearTimeout(copiedTimer)
 })
 </script>
 

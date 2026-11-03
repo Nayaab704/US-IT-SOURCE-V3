@@ -14,6 +14,8 @@ import { fileVersion, ImagePipeline, PUBLIC_BASE, readRedactions, type Img, type
  * - team/* → portraits
  * - contact/* → photos; NN.webm + NN.mp4 + NN-poster.* → one video loop each
  * - menu/<key>.* → menu stills
+ * - about/hero/<slot>-<x>.* (slot 1–3, 2–3 images each) → the About headline's inline photos;
+ *   about/steps/01.* … 04.* → "How we work" photos
  * - public/video/ops.(mp4|webm) + ops-poster.* → the flexible frame's footage
  * Videos are served as they are, with ?v=<content hash>. Regenerated in dev when public/media changes.
  */
@@ -27,8 +29,11 @@ export interface MediaManifest {
   projects: Record<string, ProjectShot[]>
   services: Record<string, { bg: Img | null; seq: Img[]; loop: string[] }>
   team: Img[]
-  contact: { images: Img[]; videos: { sources: string[]; poster: Img | null }[] }
+  /** File names (no extension) of `team`, same order: matched to people by "firstname-lastname". */
+  teamNames: string[]
+  contact: { images: Img[]; imageNames: string[]; videos: { sources: string[]; poster: Img | null }[] }
   menu: Record<string, Img>
+  about: { hero: Img[][]; steps: (Img | null)[] }
   flex: { sources: string[]; poster: Img | null }
   /** Shipped ribbon environment bakes in public/ribbon/ (app/utils/ribbon/envBake.ts). */
   ribbonEnv: string[]
@@ -46,7 +51,7 @@ async function scan(publicRoot: string, cacheDir: string): Promise<MediaManifest
   const pipe = new ImagePipeline(publicRoot, cacheDir, readRedactions(root))
   const img = (rel: string, role: Role) => pipe.process(rel, role)
   const video = (rel: string) => `/${rel}?v=${fileVersion(join(publicRoot, ...rel.split('/')))}`
-  const out: MediaManifest = { projects: {}, services: {}, team: [], contact: { images: [], videos: [] }, menu: {}, flex: { sources: [], poster: null }, ribbonEnv: [] }
+  const out: MediaManifest = { projects: {}, services: {}, team: [], teamNames: [], contact: { images: [], imageNames: [], videos: [] }, menu: {}, about: { hero: [[], [], []], steps: [null, null, null, null] }, flex: { sources: [], poster: null }, ribbonEnv: [] }
 
   for (const slug of dirs(join(root, 'projects'))) {
     const shots: ProjectShot[] = []
@@ -81,13 +86,19 @@ async function scan(publicRoot: string, cacheDir: string): Promise<MediaManifest
 
   for (const f of files(join(root, 'team')).filter((x) => IMAGE.test(x))) {
     const r = await img(`media/team/${f}`, 'portrait')
-    if (r) out.team.push(strip(r))
+    if (r) {
+      out.team.push(strip(r))
+      out.teamNames.push(f.replace(/\.\w+$/, '').toLowerCase())
+    }
   }
 
   const contact = files(join(root, 'contact'))
   for (const f of contact.filter((x) => IMAGE.test(x) && !/-poster\./i.test(x))) {
     const r = await img(`media/contact/${f}`, 'photo')
-    if (r) out.contact.images.push(strip(r))
+    if (r) {
+      out.contact.images.push(strip(r))
+      out.contact.imageNames.push(f.replace(/\.\w+$/, ''))
+    }
   }
   const names = [...new Set(contact.filter((f) => /\.(mp4|webm)$/i.test(f)).map((f) => f.replace(/\.(mp4|webm)$/i, '')))]
   for (const n of names) {
@@ -100,6 +111,19 @@ async function scan(publicRoot: string, cacheDir: string): Promise<MediaManifest
   for (const f of files(join(root, 'menu')).filter((x) => IMAGE.test(x))) {
     const r = await img(`media/menu/${f}`, 'still')
     if (r) out.menu[f.replace(/\.\w+$/, '')] = strip(r)
+  }
+
+  for (const f of files(join(root, 'about', 'hero')).filter((x) => IMAGE.test(x))) {
+    const m = /^([1-3])-/.exec(f)
+    if (!m) continue
+    const r = await img(`media/about/hero/${f}`, 'photo')
+    if (r) out.about.hero[Number(m[1]) - 1]!.push(strip(r))
+  }
+  for (const f of files(join(root, 'about', 'steps')).filter((x) => IMAGE.test(x))) {
+    const m = /^0([1-4])\./.exec(f)
+    if (!m) continue
+    const r = await img(`media/about/steps/${f}`, 'photo')
+    if (r) out.about.steps[Number(m[1]) - 1] = strip(r)
   }
 
   const vids = files(join(publicRoot, 'video'))
@@ -125,8 +149,10 @@ const TYPES = `declare module '#build/media-manifest.mjs' {
     projects: Record<string, { img: Img; mobile: boolean; num: string }[]>
     services: Record<string, { bg: Img | null; seq: Img[]; loop: string[] }>
     team: Img[]
-    contact: { images: Img[]; videos: { sources: string[]; poster: Img | null }[] }
+    teamNames: string[]
+    contact: { images: Img[]; imageNames: string[]; videos: { sources: string[]; poster: Img | null }[] }
     menu: Record<string, Img>
+    about: { hero: Img[][]; steps: (Img | null)[] }
     flex: { sources: string[]; poster: Img | null }
     ribbonEnv: string[]
   }

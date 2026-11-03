@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { gsap } from 'gsap'
 import { people } from '~/data/contact'
-import { MENU_LINKS, type MenuKey } from '~/composables/useMenu'
+import { MENU_LINKS, type MenuKey, type MenuLinkKey } from '~/composables/useMenu'
 
 /**
  * The menu (F4, Metalab-style). The live page "shrinks into a card": a warm-white layer with a
@@ -24,7 +24,7 @@ const card = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
 const firstLink = ref<HTMLElement | null>(null)
 const visible = ref(false)
-const still = ref<MenuKey | null>(null)
+const still = ref<MenuLinkKey | null>(null)
 const state = { p: 0 }
 let tween: gsap.core.Timeline | null = null
 let returnFocus: HTMLElement | null = null
@@ -142,12 +142,19 @@ function onResize() {
   if (visible.value) render()
 }
 /** Keyboard focus previews the section; the programmatic focus on open keeps the live page. */
-function onFocus(e: FocusEvent, key: MenuKey) {
+function onFocus(e: FocusEvent, key: MenuLinkKey) {
   if ((e.target as HTMLElement).matches(':focus-visible')) still.value = key
 }
 const route = useRoute()
-function pick(key: MenuKey, e: Event) {
+const { go: rectGo } = useRectTransition()
+function pick(key: MenuLinkKey, e: Event) {
   e.preventDefault()
+  if (key === 'about') {
+    // A page of its own: the link's rectangle grows into it (already there: just close).
+    open.value = false
+    if (route.path !== '/about') void rectGo('/about', e.currentTarget as Element)
+    return
+  }
   if (route.path !== '/') {
     // Another page (a case study): go home, straight to that section (no opening).
     open.value = false
@@ -183,7 +190,7 @@ onBeforeUnmount(() => {
             v-for="(l, i) in MENU_LINKS"
             :key="l.key"
             :ref="i === 0 ? (el) => (firstLink = el as HTMLElement) : undefined"
-            :href="l.key === 'home' ? '/' : `/?to=${l.key}`"
+            :href="l.href"
             class="mn-link mn-rise"
             @mouseenter="still = l.key"
             @mouseleave="still = null"

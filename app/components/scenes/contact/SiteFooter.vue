@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** Site footer (F3): dark, small. Location and LinkedIn appear once supplied (docs/PLACEHOLDERS.md). */
-import type { MenuKey } from '~/composables/useMenu'
+import type { MenuLinkKey } from '~/composables/useMenu'
 
 /** The company's LinkedIn page — empty until supplied; the link is hidden meanwhile. */
 const LINKEDIN_URL = ''
@@ -8,16 +8,23 @@ const LINKEDIN_URL = ''
 const { scrollTo } = useLenis()
 const { goTo } = useMenu()
 const route = useRoute()
-const links: { label: string; to: string; key: MenuKey }[] = [
+const links: { label: string; to: string; key: MenuLinkKey }[] = [
   // Real URLs (not #anchors: the smooth-scroll plugin would jump to the section's raw top, mid-transition).
   { label: 'Work', to: '/?to=projects', key: 'projects' },
   { label: 'Services', to: '/?to=services', key: 'services' },
+  { label: 'About', to: '/about', key: 'about' },
   { label: 'Contact', to: '/?to=contact', key: 'contact' },
 ]
-/** In-page links land where each section is settled (see useMenu), smoothly. */
-function go(e: MouseEvent, key: MenuKey) {
+const { go: rectGo } = useRectTransition()
+/** In-page links land where each section is settled (see useMenu), smoothly; About is its own page. */
+function go(e: MouseEvent, key: MenuLinkKey) {
   e.preventDefault()
-  // On a case-study page: back home, straight to that section.
+  if (key === 'about') {
+    if (route.path !== '/about') void rectGo('/about', e.currentTarget as Element)
+    else scrollTo(0, { duration: 1.6 })
+    return
+  }
+  // On another page: back home, straight to that section.
   if (route.path !== '/') void navigateTo(`/?to=${key}`)
   else goTo(key)
 }
