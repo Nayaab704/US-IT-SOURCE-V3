@@ -20,8 +20,8 @@ Last updated: fix pass — media pipeline, privacy, performance (2026-11-02).
 | [ ] | Domain / canonical URL | e.g. `https://www.usitsource.com` → add `link rel="canonical"` + `og:url` in `app/pages/index.vue` | `<head>` | — | **not set** (no domain yet) | — |
 | [x] | Page title | "US IT Source — Custom software built around the way you work" | `<title>`, og/twitter title | — | owner | — |
 | [ ] | Meta description | "US IT Source designs and builds custom software, AI and computer vision around the way each business actually runs." | `<meta name="description">`, og/twitter | ≤ 160 chars | from approved copy — **confirm** | — |
-| [x] | Menu stills | `public/media/menu/{home,projects,services,contact}.webp` | menu card (hover / focus a link) | 720×1246 (any format) | generated screenshots of the site — **regenerated 2026-11-02**; regenerate when sections change (see `public/media/menu/README.txt`) | — |
-| [ ] | About link target | route `/about` | lab SiteNav only | — | label | — |
+| [x] | Menu stills | `public/media/menu/{home,projects,services,about,contact}.webp` | menu card (hover / focus a link) | 720×1246 (any format) | generated screenshots of the site — **regenerated 2026-11-02 (About added)**; regenerate when sections change (see `public/media/menu/README.txt`) | — |
+| [x] | About page | route `/about` | menu + footer (rectangle transition) | — | **built** — its own slots are listed under "About page" below | — |
 
 ## Opening · Hero
 | ✓ | Slot | Expected file / value | Where it appears | Size / format | State | Search terms |
@@ -102,6 +102,24 @@ Listed in `public/media/redactions.json` (fractions of the image). Remove an ent
 
 Scanned 2026-11-02 with no redaction needed: Garage Automation `01`, `02`, `03`, `01-mobile`, `02-mobile` (demo data — "Northstar Auto Group", "Hello, Jordan", stock numbers and car models only; no VINs, emails, phone numbers or customer names); Nester `01`.
 
+## About page (/about)
+Photos are auto-detected: `public/media/about/hero/<slot>-<a|b|c>.*` (slot 1–3, 2–3 images each) and `public/media/about/steps/01.*` … `04.*`; portraits `public/media/team/firstname-lastname.*`. Until a file exists, the slot shows the stand-in below (your own photos already on the site — never stock).
+
+| ✓ | Slot | Expected file / value | Where it appears | Size / format | State | Search terms |
+|---|---|---|---|---|---|---|
+| [ ] | Hero photo 1 — "We sit with …" | `about/hero/1-a.*`, `1-b.*` (, `1-c.*`) | inline in the headline, crossfading | landscape ~3:2, any format | **stand-in**: contact photo-02 + photo-01 | — (real client sessions) |
+| [ ] | Hero photo 2 — "learn …" | `about/hero/2-a.*`, `2-b.*` | same | same | **stand-in**: contact photo-03 + training seq-01 | — |
+| [ ] | Hero photo 3 — "and build …" | `about/hero/3-a.*`, `3-b.*` | same | same | **stand-in**: vision bg + software bg | — |
+| [ ] | Step photo — Sit with the work | `about/steps/01.*` | "How we work" | 4:3, any format | **stand-in**: contact photo-02 | — |
+| [ ] | Step photo — Map the flow | `about/steps/02.*` | same | same | **stand-in**: contact photo-05 | — |
+| [ ] | Step photo — Build to the map | `about/steps/03.*` | same | same | **stand-in**: software bg | — |
+| [ ] | Step photo — Run it, then grow it | `about/steps/04.*` | same | same | **stand-in**: training seq-02 | — |
+| [ ] | Leadership portraits (3) | `public/media/team/mahwish-akhtar.*`, `monis-aziz.*`, `lauren-peet.*` | Leadership, tall frames | 3:4, ~1500 px tall, real people with consent | **label**: `[PORTRAIT: Name]` frames | — (never stock or generated faces) |
+| [ ] | Bios (3) | 1–2 lines per person (`app/data/about.ts`, `bio`) | Leadership, on hover / focus (always on touch) | — | **label**: `[PLACEHOLDER: 1–2 line bio]` (shown, as asked) | — |
+| [ ] | Company facts | founded year · location · what we're known for (`app/data/about.ts`, `facts`) | night row above the closing | — | **label**: `[FOUNDED YEAR] · [LOCATION] · [WHAT WE'RE KNOWN FOR]` (shown, as asked) | — |
+| [ ] | Meta description | "We sit with your team, learn how you work, and build software around it — custom apps, AI and computer vision from US IT Source." | `/about` `<meta name="description">` | ≤ 160 chars | written from your hero sentence — **confirm** | — |
+| [x] | Copy | hero sentence, giant line, four steps, statements, closing | /about | — | owner (verbatim); "extended / trained" lines from the services section | — |
+
 ## Team
 | ✓ | Slot | Expected file / value | Where it appears | Size / format | State | Search terms |
 |---|---|---|---|---|---|---|
@@ -130,3 +148,6 @@ Scanned 2026-11-02 with no redaction needed: Garage Automation `01`, `02`, `03`,
 4. Nester case-study text (`docs/case-studies/nester.md`); whether Project Assembly Track joins the tabs.
 5. Domain for the canonical URL; confirm the meta description.
 6. Whether to keep the contact form.
+7. About page: three short bios, the company facts (founded year, location, what you're known for), confirm its meta description.
+
+**About page files** — hero photos `public/media/about/hero/1-a.*` … `3-b.*`, step photos `public/media/about/steps/01.*` … `04.*`, leadership portraits `public/media/team/firstname-lastname.*` (until then: your own site photos stand in; portraits show labelled frames).
